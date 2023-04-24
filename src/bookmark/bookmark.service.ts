@@ -2,11 +2,11 @@ import {
   ForbiddenException,
   Injectable,
 } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
 import {
   CreateBookmarkDto,
   EditBookmarkDto,
 } from './dto';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class BookmarkService {
@@ -19,26 +19,26 @@ export class BookmarkService {
     const bookmark =
       await this.prisma.bookmark.create({
         data: {
+          userId,
           ...dto,
         },
       });
-
     return bookmark;
   }
 
-  async getBookmarks(userId: number) {
-    return await this.prisma.bookmark.findMany({
+  getBookmarks(userId: number) {
+    return this.prisma.bookmark.findMany({
       where: {
         userId,
       },
     });
   }
 
-  async getBookmarkById(
+  getBookmarkById(
     userId: number,
     bookmarkId: number,
   ) {
-    return await this.prisma.bookmark.findFirst({
+    return this.prisma.bookmark.findFirst({
       where: {
         id: bookmarkId,
         userId,
@@ -58,11 +58,10 @@ export class BookmarkService {
           id: bookmarkId,
         },
       });
-
-    // check if user owns the bookmark
+    // check if user owns thhe bookmark
     if (!bookmark || bookmark.userId !== userId)
       throw new ForbiddenException(
-        'Access to resources denied',
+        'Access to resource denied',
       );
 
     return this.prisma.bookmark.update({
@@ -86,11 +85,10 @@ export class BookmarkService {
           id: bookmarkId,
         },
       });
-
-    // check if user owns the bookmark
+    // check if user owns thhe bookmark
     if (!bookmark || bookmark.userId !== userId)
       throw new ForbiddenException(
-        'Access to resources denied',
+        'Access to resource denied',
       );
 
     await this.prisma.bookmark.delete({

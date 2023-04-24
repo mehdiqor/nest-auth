@@ -168,7 +168,7 @@ describe('App e2e', () => {
       it('should create bookmarks', () => {
         const dto: CreateBookmarkDto = {
           title: 'first bookmark',
-          description: 'this is my desc',
+          link: 'www.google.com',
         };
         return pactum
           .spec()
