@@ -18,15 +18,20 @@ export class TasksService {
     userId: number,
     dto: CreateTaskDto,
   ) {
-    const task = await this.prisma.task.create({
-      data: {
-        userId,
-        ...dto,
-      },
-    });
-    if (!task)
-      throw new InternalServerErrorException();
-    return task;
+    // const task = await this.prisma.task.create({
+    //   data: {
+    //     userId,
+    //     ...dto,
+    //   },
+    // });
+    // if (!task)
+    //   throw new InternalServerErrorException();
+    // return task;
+    return {
+      msg: 'this is your ID and DATA',
+      userId,
+      dto,
+    };
   }
 
   async getUserTasks(userId: number) {
@@ -73,17 +78,23 @@ export class TasksService {
     await this.getTaskById(userId, taskId);
 
     // update task
-    const task = await this.prisma.task.update({
-      where: {
-        id: taskId,
-      },
-      data: {
-        ...dto,
-      },
-    });
-    if (!task)
-      throw new InternalServerErrorException();
-    return task;
+    // const task = await this.prisma.task.update({
+    //   where: {
+    //     id: taskId,
+    //   },
+    //   data: {
+    //     ...dto,
+    //   },
+    // });
+    // if (!task)
+    //   throw new InternalServerErrorException();
+    // return task;
+    return {
+      msg: 'this is your ID, Task ID and DATA',
+      userId,
+      taskId,
+      dto,
+    };
   }
 
   async deleteTaskById(
