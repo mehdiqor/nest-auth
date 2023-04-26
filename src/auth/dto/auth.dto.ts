@@ -3,6 +3,7 @@ import {
   IsEmail,
   IsNotEmpty,
   IsString,
+  IsStrongPassword,
 } from 'class-validator';
 
 export class AuthDto {
@@ -10,15 +11,14 @@ export class AuthDto {
   @IsNotEmpty()
   @ApiProperty({
     type: String,
-    description: 'This is a required property',
   })
   email: string;
 
   @ApiProperty({
     type: String,
-    description: 'This is a required property',
   })
   @IsString()
   @IsNotEmpty()
+  @IsStrongPassword()
   password: string;
 }

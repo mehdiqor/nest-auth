@@ -3,6 +3,7 @@ import {
   IsEmail,
   IsOptional,
   IsString,
+  MaxLength,
 } from 'class-validator';
 
 export class EditUserDto {
@@ -11,25 +12,24 @@ export class EditUserDto {
   @ApiProperty({
     required: false,
     type: String,
-    description: 'This is a optional property',
   })
   email?: string;
 
   @IsString()
   @IsOptional()
+  @MaxLength(10)
   @ApiProperty({
     required: false,
     type: String,
-    description: 'This is a optional property',
   })
   firstName?: string;
 
   @IsString()
   @IsOptional()
+  @MaxLength(10)
   @ApiProperty({
     required: false,
     type: String,
-    description: 'This is a optional property',
   })
   lastName?: string;
 }
