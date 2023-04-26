@@ -12,7 +12,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { TasksService } from './tasks.service';
-import { GetUser } from 'src/auth/decorator';
+import { GetUser } from '../auth/decorator';
 import {
   CreateTaskDto,
   UpdateTaskStatusDto,
@@ -21,7 +21,7 @@ import {
   ApiBearerAuth,
   ApiTags,
 } from '@nestjs/swagger';
-import { JwtGuard } from 'src/auth/guard';
+import { JwtGuard } from '../auth/guard';
 
 @ApiTags('Task')
 @ApiBearerAuth('Token-Please')

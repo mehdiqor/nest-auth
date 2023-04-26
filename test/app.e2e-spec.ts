@@ -6,12 +6,12 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../src/prisma/prisma.service';
 import * as pactum from 'pactum';
-import { AuthDto } from 'src/auth/dto';
-import { EditUserDto } from 'src/user/dto';
+import { AuthDto } from '../src/auth/dto';
+import { EditUserDto } from '../src/user/dto';
 import {
   CreateBookmarkDto,
   EditBookmarkDto,
-} from 'src/bookmark/dto';
+} from '../src/bookmark/dto';
 
 describe('App e2e', () => {
   let app: INestApplication;
