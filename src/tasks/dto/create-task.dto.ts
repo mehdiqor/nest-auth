@@ -12,7 +12,7 @@ export class CreateTaskDto {
     type: String,
     description: 'This is a required property',
   })
-  titile: string;
+  title: string;
 
   @IsString()
   @IsOptional()
@@ -22,18 +22,4 @@ export class CreateTaskDto {
     description: 'This is a optional property',
   })
   description?: string;
-
-  @IsString()
-  @IsNotEmpty()
-  @ApiProperty({
-    type: String,
-    description: 'This is a required property',
-  })
-  status: Status;
-}
-
-export enum Status {
-  OPEN,
-  IN_PROGRES,
-  DONE,
 }

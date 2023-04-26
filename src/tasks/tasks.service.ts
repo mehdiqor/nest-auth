@@ -1,12 +1,11 @@
 import {
-  ForbiddenException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import {
   CreateTaskDto,
-  EditTaskDto,
+  UpdateTaskStatusDto,
 } from './dto';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -18,20 +17,17 @@ export class TasksService {
     userId: number,
     dto: CreateTaskDto,
   ) {
-    // const task = await this.prisma.task.create({
-    //   data: {
-    //     userId,
-    //     ...dto,
-    //   },
-    // });
-    // if (!task)
-    //   throw new InternalServerErrorException();
-    // return task;
-    return {
-      msg: 'this is your ID and DATA',
-      userId,
-      dto,
-    };
+    const { title, description } = dto;
+    const task = await this.prisma.task.create({
+      data: {
+        userId,
+        title,
+        description,
+      },
+    });
+    if (!task)
+      throw new InternalServerErrorException();
+    return task;
   }
 
   async getUserTasks(userId: number) {
@@ -58,12 +54,6 @@ export class TasksService {
       },
     );
 
-    // check if user owns the task
-    if (task.userId !== userId)
-      throw new ForbiddenException(
-        'Access to resource denied',
-      );
-
     // check task exist
     if (!task) throw new NotFoundException();
     return task;
@@ -72,29 +62,23 @@ export class TasksService {
   async updateTaskStatus(
     userId: number,
     taskId: number,
-    dto: EditTaskDto,
+    dto: UpdateTaskStatusDto,
   ) {
     // check exist task
     await this.getTaskById(userId, taskId);
 
     // update task
-    // const task = await this.prisma.task.update({
-    //   where: {
-    //     id: taskId,
-    //   },
-    //   data: {
-    //     ...dto,
-    //   },
-    // });
-    // if (!task)
-    //   throw new InternalServerErrorException();
-    // return task;
-    return {
-      msg: 'this is your ID, Task ID and DATA',
-      userId,
-      taskId,
-      dto,
-    };
+    const task = await this.prisma.task.update({
+      where: {
+        id: taskId,
+      },
+      data: {
+        status: dto.status
+      },
+    });
+    if (!task)
+      throw new InternalServerErrorException();
+    return task;
   }
 
   async deleteTaskById(
@@ -110,5 +94,7 @@ export class TasksService {
         id: taskId,
       },
     });
+
+    return { msg: 'removed' };
   }
 }

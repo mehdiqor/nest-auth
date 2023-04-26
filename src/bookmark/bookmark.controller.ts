@@ -20,12 +20,7 @@ import {
 } from './dto';
 import {
   ApiBearerAuth,
-  ApiCreatedResponse,
-  ApiForbiddenResponse,
-  ApiNotFoundResponse,
-  ApiOkResponse,
   ApiTags,
-  ApiUnprocessableEntityResponse,
 } from '@nestjs/swagger';
 
 @ApiTags('Bookmark')
@@ -38,15 +33,6 @@ export class BookmarkController {
   ) {}
 
   @Post()
-  @ApiCreatedResponse({
-    description: 'Created Succesfully',
-  })
-  @ApiUnprocessableEntityResponse({
-    description: 'Bad Request',
-  })
-  @ApiForbiddenResponse({
-    description: 'Unauthorized Request',
-  })
   createBookmark(
     @GetUser('id') userId: number,
     @Body() dto: CreateBookmarkDto,
@@ -58,13 +44,6 @@ export class BookmarkController {
   }
 
   @Get()
-  @ApiOkResponse({
-    description:
-      'The resources were returned successfully',
-  })
-  @ApiForbiddenResponse({
-    description: 'Unauthorized Request',
-  })
   getBookmarks(@GetUser('id') userId: number) {
     return this.bookmarkService.getBookmarks(
       userId,
@@ -72,16 +51,6 @@ export class BookmarkController {
   }
 
   @Get(':id')
-  @ApiOkResponse({
-    description:
-      'The resource was returned successfully',
-  })
-  @ApiForbiddenResponse({
-    description: 'Unauthorized Request',
-  })
-  @ApiNotFoundResponse({
-    description: 'Resource not found',
-  })
   getBookmarkById(
     @GetUser('id') userId: number,
     @Param('id', ParseIntPipe) bookmarkId: number,
@@ -93,19 +62,6 @@ export class BookmarkController {
   }
 
   @Patch(':id')
-  @ApiOkResponse({
-    description:
-      'The resource was updated successfully',
-  })
-  @ApiNotFoundResponse({
-    description: 'Resource not found',
-  })
-  @ApiForbiddenResponse({
-    description: 'Unauthorized Request',
-  })
-  @ApiUnprocessableEntityResponse({
-    description: 'Bad Request',
-  })
   editBookmarkById(
     @GetUser('id') userId: number,
     @Param('id', ParseIntPipe) bookmarkId: number,
@@ -120,16 +76,6 @@ export class BookmarkController {
 
   @HttpCode(HttpStatus.NO_CONTENT)
   @Delete(':id')
-  @ApiOkResponse({
-    description:
-      'The resource was returned successfully',
-  })
-  @ApiForbiddenResponse({
-    description: 'Unauthorized Request',
-  })
-  @ApiNotFoundResponse({
-    description: 'Resource not found',
-  })
   deleteBookmarkById(
     @GetUser('id') userId: number,
     @Param('id', ParseIntPipe) bookmarkId: number,

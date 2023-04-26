@@ -12,11 +12,7 @@ import { EditUserDto } from './dto';
 import { UserService } from './user.service';
 import {
   ApiBearerAuth,
-  ApiForbiddenResponse,
-  ApiNotFoundResponse,
-  ApiOkResponse,
   ApiTags,
-  ApiUnprocessableEntityResponse,
 } from '@nestjs/swagger';
 
 @ApiTags('User')
@@ -27,34 +23,11 @@ export class UserController {
   constructor(private userService: UserService) {}
 
   @Get('me')
-  @ApiOkResponse({
-    description:
-      'The resource was returned successfully',
-  })
-  @ApiForbiddenResponse({
-    description: 'Unauthorized Request',
-  })
-  @ApiNotFoundResponse({
-    description: 'Resource not found',
-  })
   getMe(@GetUser() user: User) {
     return user;
   }
 
   @Patch('edit')
-  @ApiOkResponse({
-    description:
-      'The resource was updated successfully',
-  })
-  @ApiNotFoundResponse({
-    description: 'Resource not found',
-  })
-  @ApiForbiddenResponse({
-    description: 'Unauthorized Request',
-  })
-  @ApiUnprocessableEntityResponse({
-    description: 'Bad Request',
-  })
   editUser(
     @GetUser('id') userId: number,
     @Body() dto: EditUserDto,
