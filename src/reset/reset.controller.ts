@@ -13,7 +13,6 @@ import { ResetService } from './reset.service';
 
 @ApiTags('Reset')
 @ApiBearerAuth('Token-Please')
-// @UseGuards(JwtGuard)
 @Controller('reset')
 export class ResetController {
   constructor(
@@ -22,6 +21,22 @@ export class ResetController {
 
   @Post('forgot')
   forgotPassword(@Body('email') email: string) {
-    return this.resetService.forgotPassword(email);
+    return this.resetService.forgotPassword(
+      email,
+    );
+  }
+
+  @Post('change')
+  resetPassword(
+    @Body('token') token: string,
+    @Body('password') password: string,
+    @Body('password_confirm')
+    password_confirm: string,
+  ) {
+    return this.resetService.resetPassword(
+      token,
+      password,
+      password_confirm,
+    );
   }
 }

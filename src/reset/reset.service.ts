@@ -1,6 +1,11 @@
 import { MailerService } from '@nestjs-modules/mailer';
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
+import * as argon from 'argon2';
 
 @Injectable()
 export class ResetService {
@@ -30,6 +35,47 @@ export class ResetService {
 
     return {
       message: 'Check your Email',
+    };
+  }
+
+  async resetPassword(
+    token: string,
+    password: string,
+    password_confirm,
+  ) {
+    if (password !== password_confirm)
+      throw new BadRequestException(
+        'Passwords do not match',
+      );
+
+    const reset =
+      await this.prisma.reset.findFirst({
+        where: {
+          token,
+        },
+      });
+
+    const user =
+      await this.prisma.user.findUnique({
+        where: {
+          email: reset.email,
+        },
+      });
+
+    if (!user) throw new NotFoundException();
+
+    const hash = await argon.hash(password);
+    await this.prisma.user.update({
+      where: {
+        id: user.id,
+      },
+      data: {
+        hash,
+      },
+    });
+
+    return {
+      message: 'Password Changed Successfully',
     };
   }
 }
