@@ -20,8 +20,28 @@ model User {
   lastName  String?
   bookmarks Bookmark[]
   Task      Task[]
+  Token     Token[]
 
   @@map("users")
+}
+
+model Token {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  token     String
+  createdAt DateTime @default(now())
+  expiredAt DateTime
+
+  @@map("tokens")
+}
+
+model Reset {
+  id    Int    @id @default(autoincrement())
+  email String @unique
+  token String @unique
+
+  @@map("reset")
 }
 
 model Bookmark {

@@ -97,10 +97,16 @@ export class AuthService {
           secret: secretJwt,
         });
 
-      // const access_token = await this.jwt.signAsync(
-      //   { id, email },
-      //   { expiresIn: '30s', secret: secretJwt },
-      // );
+      // check token exist
+      const tokenEntity =
+        await this.prisma.token.findFirst({
+          where: {
+            userId: id,
+            expiredAt: { gt: new Date() },
+          },
+        });
+      if (!tokenEntity)
+        throw new UnauthorizedException();
 
       return this.signAccessToken(
         id,
@@ -124,6 +130,7 @@ export class AuthService {
     const secretJwt =
       this.config.get('JWT_SECRET');
 
+    // generate Atoken
     const access_token = await this.jwt.signAsync(
       payload,
       {
@@ -131,11 +138,26 @@ export class AuthService {
         secret: secretJwt,
       },
     );
+    // generate Rtoken
     const refresh_token =
       await this.jwt.signAsync(
         { id: userId },
         { secret: secretJwt },
       );
+
+    // save token in DB
+    const expiredAt = new Date();
+    expiredAt.setDate(expiredAt.getDate() + 7); // +7 days
+
+    await this.prisma.token.create({
+      data: {
+        userId,
+        token: refresh_token,
+        expiredAt,
+      },
+    });
+
+    // send Rtoken with cookies
     response.cookie(
       'refresh_token',
       refresh_token,
@@ -150,7 +172,26 @@ export class AuthService {
     };
   }
 
-  async signout(response: Response) {
+  async signout(
+    request: Request,
+    response: Response,
+  ) {
+    // remove from DB
+    const refreshToken =
+      request.cookies['refresh_token'];
+    const { id } =
+      await this.prisma.token.findFirst({
+        where: {
+          token: refreshToken,
+        },
+      });
+    await this.prisma.token.delete({
+      where: {
+        id,
+      },
+    });
+
+    // remove from cookie
     response.clearCookie('refresh_token');
 
     return {

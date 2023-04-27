@@ -48,9 +48,13 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Post('signout')
   signout(
+    @Req() request: Request,
     @Res({ passthrough: true })
     response: Response,
   ) {
-    return this.authService.signout(response);
+    return this.authService.signout(
+      request,
+      response,
+    );
   }
 }
