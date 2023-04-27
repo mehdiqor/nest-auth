@@ -1,6 +1,7 @@
 import {
   ForbiddenException,
   Injectable,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthDto } from './dto';
@@ -8,7 +9,7 @@ import * as argon from 'argon2';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { Prisma } from '@prisma/client';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 
 @Injectable()
 export class AuthService {
@@ -73,14 +74,45 @@ export class AuthService {
         'Credentials incorrect',
       );
 
-    return this.signToken(
+    return this.signAccessToken(
       user.id,
       user.email,
       response,
     );
   }
 
-  async signToken(
+  async refreshToken(
+    request: Request,
+    response: Response,
+  ) {
+    try {
+      const secretJwt =
+        this.config.get('JWT_SECRET');
+
+      const refreshToken =
+        request.cookies['refresh_token'];
+
+      const { id, email } =
+        await this.jwt.verifyAsync(refreshToken, {
+          secret: secretJwt,
+        });
+
+      // const access_token = await this.jwt.signAsync(
+      //   { id, email },
+      //   { expiresIn: '30s', secret: secretJwt },
+      // );
+
+      return this.signAccessToken(
+        id,
+        email,
+        response,
+      );
+    } catch (error) {
+      throw new UnauthorizedException();
+    }
+  }
+
+  async signAccessToken(
     userId: number,
     email: string,
     response: Response,
@@ -115,6 +147,14 @@ export class AuthService {
 
     return {
       access_token,
+    };
+  }
+
+  async signout(response: Response) {
+    response.clearCookie('refresh_token');
+
+    return {
+      message: 'Signed out Successfully',
     };
   }
 }

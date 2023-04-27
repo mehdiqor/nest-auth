@@ -6,10 +6,20 @@ import {
   SwaggerModule,
 } from '@nestjs/swagger';
 import { Logger } from '@nestjs/common';
+import * as cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  app.use(cookieParser());
+  app.enableCors({
+    origin: [
+      'http://localhost:3000', // for react
+      'http://localhost:8080', // for vue.js
+      'http://localhost:4200', // for angular
+    ],
+    credentials: true,
+  });
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
