@@ -8,6 +8,7 @@ import * as argon from 'argon2';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { Prisma } from '@prisma/client';
+import { Response } from 'express';
 
 @Injectable()
 export class AuthService {
@@ -29,9 +30,13 @@ export class AuthService {
         },
       });
 
-      return this.signToken(user.id, user.email);
+      delete user.hash;
+      return user;
     } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (
+        error instanceof
+        Prisma.PrismaClientKnownRequestError
+      ) {
         if (error.code === 'P2002') {
           throw new ForbiddenException(
             'Credentials taken',
@@ -42,7 +47,7 @@ export class AuthService {
     }
   }
 
-  async signin(dto: AuthDto) {
+  async signin(dto: AuthDto, response: Response) {
     // find user by email
     const user =
       await this.prisma.user.findUnique({
@@ -50,6 +55,7 @@ export class AuthService {
           email: dto.email,
         },
       });
+
     // if user does not exist throw exception
     if (!user)
       throw new ForbiddenException(
@@ -67,29 +73,48 @@ export class AuthService {
         'Credentials incorrect',
       );
 
-    return this.signToken(user.id, user.email);
+    return this.signToken(
+      user.id,
+      user.email,
+      response,
+    );
   }
 
   async signToken(
     userId: number,
     email: string,
+    response: Response,
   ): Promise<{ access_token: string }> {
     const payload = {
       sub: userId,
       email,
     };
-    const secret = this.config.get('JWT_SECRET');
+    const secretJwt =
+      this.config.get('JWT_SECRET');
 
-    const token = await this.jwt.signAsync(
+    const access_token = await this.jwt.signAsync(
       payload,
       {
-        expiresIn: '30days',
-        secret: secret,
+        expiresIn: '30s',
+        secret: secretJwt,
+      },
+    );
+    const refresh_token =
+      await this.jwt.signAsync(
+        { id: userId },
+        { secret: secretJwt },
+      );
+    response.cookie(
+      'refresh_token',
+      refresh_token,
+      {
+        httpOnly: true,
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 1 Week
       },
     );
 
     return {
-      access_token: token,
+      access_token,
     };
   }
 }
