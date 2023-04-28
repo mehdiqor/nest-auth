@@ -7,8 +7,9 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import {
-  AuthDto,
-  ForgetPasswordDto,
+  SignupDto,
+  SigninDto,
+  ForgotPasswordDto,
   ResetPasswordDto,
 } from './dto';
 import * as argon from 'argon2';
@@ -27,13 +28,19 @@ export class AuthService {
     private mailerService: MailerService,
   ) {}
 
-  async signup(dto: AuthDto) {
+  async signup(dto: SignupDto) {
     try {
-      // generate the password hash
+      if (dto.password !== dto.password_confirm)
+        throw new BadRequestException(
+          'Passwords do not match',
+        );
+      // generate the password has
       const hash = await argon.hash(dto.password);
       // save the new user
       const user = await this.prisma.user.create({
         data: {
+          firstName: dto.firstName,
+          lastName: dto.lastName,
           email: dto.email,
           hash,
         },
@@ -56,7 +63,10 @@ export class AuthService {
     }
   }
 
-  async signin(dto: AuthDto, response: Response) {
+  async signin(
+    dto: SigninDto,
+    response: Response,
+  ) {
     // find user by email
     const user =
       await this.prisma.user.findUnique({
@@ -207,8 +217,8 @@ export class AuthService {
     };
   }
 
-  async forgetPassword(dto: ForgetPasswordDto) {
-    // create forget-pass data
+  async forgotPassword(dto: ForgotPasswordDto) {
+    // create forgot-pass data
     const token = Math.random()
       .toString(20)
       .substring(2, 12);

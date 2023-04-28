@@ -9,8 +9,9 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import {
-  AuthDto,
-  ForgetPasswordDto,
+  SignupDto,
+  SigninDto,
+  ForgotPasswordDto,
   ResetPasswordDto,
 } from './dto';
 import { ApiTags } from '@nestjs/swagger';
@@ -22,14 +23,14 @@ export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post('signup')
-  signup(@Body() dto: AuthDto) {
+  signup(@Body() dto: SignupDto) {
     return this.authService.signup(dto);
   }
 
   @HttpCode(HttpStatus.OK)
   @Post('signin')
   signin(
-    @Body() dto: AuthDto,
+    @Body() dto: SigninDto,
     @Res({ passthrough: true })
     response: Response,
   ) {
@@ -63,9 +64,9 @@ export class AuthController {
   }
 
   @HttpCode(HttpStatus.OK)
-  @Post('forget')
-  forgetPassword(@Body() dto: ForgetPasswordDto) {
-    return this.authService.forgetPassword(dto);
+  @Post('forgot')
+  forgotPassword(@Body() dto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(dto);
   }
 
   @HttpCode(HttpStatus.OK)

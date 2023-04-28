@@ -3,10 +3,9 @@ import {
   IsEmail,
   IsNotEmpty,
   IsString,
-  IsStrongPassword,
 } from 'class-validator';
 
-export class AuthDto {
+export class SigninDto {
   @IsEmail()
   @IsNotEmpty()
   @ApiProperty({
@@ -19,6 +18,5 @@ export class AuthDto {
   })
   @IsString()
   @IsNotEmpty()
-  @IsStrongPassword()
   password: string;
 }
