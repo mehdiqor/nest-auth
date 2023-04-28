@@ -1,15 +1,22 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { AuthDto } from './dto';
+import {
+  AuthDto,
+  ForgetPasswordDto,
+  ResetPasswordDto,
+} from './dto';
 import * as argon from 'argon2';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { Prisma } from '@prisma/client';
 import { Request, Response } from 'express';
+import { MailerService } from '@nestjs-modules/mailer';
 
 @Injectable()
 export class AuthService {
@@ -17,6 +24,7 @@ export class AuthService {
     private prisma: PrismaService,
     private jwt: JwtService,
     private config: ConfigService,
+    private mailerService: MailerService,
   ) {}
 
   async signup(dto: AuthDto) {
@@ -196,6 +204,70 @@ export class AuthService {
 
     return {
       message: 'Signed out Successfully',
+    };
+  }
+
+  async forgetPassword(dto: ForgetPasswordDto) {
+    // create forget-pass data
+    const token = Math.random()
+      .toString(20)
+      .substring(2, 12);
+
+    await this.prisma.reset.create({
+      data: {
+        email: dto.email,
+        token,
+      },
+    });
+
+    // send Email
+    const url = `http://localhost:3000/reset/${token}`;
+    await this.mailerService.sendMail({
+      to: dto.email,
+      subject: 'Reset your Password',
+      html: `Click <a href="${url}">here</a> to reset your password`,
+    });
+
+    return {
+      message: 'Check your Email',
+    };
+  }
+
+  async resetPassword(dto: ResetPasswordDto) {
+    if (dto.password !== dto.password_confirm)
+      throw new BadRequestException(
+        'Passwords do not match',
+      );
+
+    // check exist user
+    const reset =
+      await this.prisma.reset.findFirst({
+        where: {
+          token: dto.token,
+        },
+      });
+
+    const user =
+      await this.prisma.user.findUnique({
+        where: {
+          email: reset.email,
+        },
+      });
+    if (!user) throw new NotFoundException();
+
+    // update user pass
+    const hash = await argon.hash(dto.password);
+    await this.prisma.user.update({
+      where: {
+        id: user.id,
+      },
+      data: {
+        hash,
+      },
+    });
+
+    return {
+      message: 'Password Changed Successfully',
     };
   }
 }

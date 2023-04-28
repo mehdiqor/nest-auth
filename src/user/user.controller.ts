@@ -27,7 +27,7 @@ export class UserController {
     return user;
   }
 
-  @Patch('edit')
+  @Patch(':id')
   editUser(
     @GetUser('id') userId: number,
     @Body() dto: EditUserDto,

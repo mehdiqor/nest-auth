@@ -8,7 +8,11 @@ import {
   Res,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { AuthDto } from './dto';
+import {
+  AuthDto,
+  ForgetPasswordDto,
+  ResetPasswordDto,
+} from './dto';
 import { ApiTags } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 
@@ -56,5 +60,17 @@ export class AuthController {
       request,
       response,
     );
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Post('forget')
+  forgetPassword(@Body() dto: ForgetPasswordDto) {
+    return this.authService.forgetPassword(dto);
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Post('reset')
+  resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.authService.resetPassword(dto);
   }
 }
