@@ -20,6 +20,7 @@ import { Prisma } from '@prisma/client';
 import { Request, Response } from 'express';
 import { MailerService } from '@nestjs-modules/mailer';
 import * as speakeasy from 'speakeasy';
+import { OAuth2Client } from 'google-auth-library';
 
 @Injectable()
 export class AuthService {
@@ -102,7 +103,7 @@ export class AuthService {
 
     // QRcode
     const secret = speakeasy.generateSecret({
-      name: 'Nest Client'
+      name: 'Nest Client',
     });
 
     // if (user.tfa_secret) return { id: user.id };
@@ -385,5 +386,48 @@ export class AuthService {
     return {
       access_token,
     };
+  }
+
+  async googleAuth(
+    gtoken: string,
+    response: Response,
+  ) {
+    const clientId = this.config.get('GOOGLE_ID');
+    const client = new OAuth2Client(clientId);
+
+    const ticket = await client.verifyIdToken({
+      idToken: gtoken,
+      audience: clientId,
+    });
+
+    const googleUser = ticket.getPayload();
+
+    if (!googleUser)
+      throw new UnauthorizedException();
+
+    let user = await this.prisma.user.findUnique({
+      where: {
+        email: googleUser.email,
+      },
+    });
+
+    const hash = await argon.hash(gtoken);
+
+    if (!user) {
+      user = await this.prisma.user.create({
+        data: {
+          firstName: googleUser.given_name,
+          lastName: googleUser.family_name,
+          email: googleUser.email,
+          hash,
+        },
+      });
+    }
+
+    return this.signAccessToken(
+      user.id,
+      user.email,
+      response,
+    );
   }
 }

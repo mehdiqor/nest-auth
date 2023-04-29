@@ -46,6 +46,7 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
     "cookie-parser": "^1.4.6",
+    "google-auth-library": "^8.7.0",
     "graphql": "^16.6.0",
     "graphql-tools": "^8.3.20",
     "nodemailer": "^6.9.1",

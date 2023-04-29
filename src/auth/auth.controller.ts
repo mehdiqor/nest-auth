@@ -76,12 +76,29 @@ export class AuthController {
     return this.authService.resetPassword(dto);
   }
 
+  @HttpCode(HttpStatus.OK)
   @Post('two-factor')
   twoFactor(
     @Body() dto: TfaDto,
     @Res({ passthrough: true })
     response: Response,
   ) {
-    return this.authService.twoFactor(dto, response);
+    return this.authService.twoFactor(
+      dto,
+      response,
+    );
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Post('google-auth')
+  googleAuth(
+    @Body('gtoken') gtoken: string,
+    @Res({ passthrough: true })
+    response: Response,
+  ) {
+    return this.authService.googleAuth(
+      gtoken,
+      response,
+    );
   }
 }
