@@ -13,6 +13,7 @@ import {
   SigninDto,
   ForgotPasswordDto,
   ResetPasswordDto,
+  TfaDto,
 } from './dto';
 import { ApiTags } from '@nestjs/swagger';
 import { Request, Response } from 'express';
@@ -73,5 +74,14 @@ export class AuthController {
   @Post('reset')
   resetPassword(@Body() dto: ResetPasswordDto) {
     return this.authService.resetPassword(dto);
+  }
+
+  @Post('two-factor')
+  twoFactor(
+    @Body() dto: TfaDto,
+    @Res({ passthrough: true })
+    response: Response,
+  ) {
+    return this.authService.twoFactor(dto, response);
   }
 }

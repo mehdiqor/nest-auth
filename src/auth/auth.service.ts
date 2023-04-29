@@ -11,6 +11,7 @@ import {
   SigninDto,
   ForgotPasswordDto,
   ResetPasswordDto,
+  TfaDto,
 } from './dto';
 import * as argon from 'argon2';
 import { JwtService } from '@nestjs/jwt';
@@ -18,6 +19,7 @@ import { ConfigService } from '@nestjs/config';
 import { Prisma } from '@prisma/client';
 import { Request, Response } from 'express';
 import { MailerService } from '@nestjs-modules/mailer';
+import * as speakeasy from 'speakeasy';
 
 @Injectable()
 export class AuthService {
@@ -92,11 +94,25 @@ export class AuthService {
         'Credentials incorrect',
       );
 
-    return this.signAccessToken(
+    const token = this.signAccessToken(
       user.id,
       user.email,
       response,
     );
+
+    // QRcode
+    const secret = speakeasy.generateSecret({
+      name: 'Nest Client'
+    });
+
+    // if (user.tfa_secret) return { id: user.id };
+
+    return {
+      token,
+      id: user.id,
+      secret: secret.ascii,
+      otpauth_url: secret.otpauth_url,
+    };
   }
 
   async refreshToken(
@@ -278,6 +294,96 @@ export class AuthService {
 
     return {
       message: 'Password Changed Successfully',
+    };
+  }
+
+  async twoFactor(
+    dto: TfaDto,
+    response: Response,
+  ) {
+    const { id, tfSecret, code } = dto;
+
+    const user = await this.prisma.user.findFirst(
+      {
+        where: {
+          id,
+        },
+      },
+    );
+
+    if (!user)
+      throw new BadRequestException(
+        'invalid credentials',
+      );
+
+    if (!tfSecret) {
+      // tfSecret = user.tfa_secret
+    }
+
+    const verified = speakeasy.totp.verify({
+      tfSecret,
+      encoding: 'asciii',
+      token: code,
+    });
+
+    if (!verified)
+      throw new BadRequestException(
+        'invalid credentials',
+      );
+
+    // if (user.tfa_secret === "") {
+    //   await this.prisma.user.update({
+    //     where: {
+    //       id
+    //     },
+    //     data: {
+    //       tfa_secret: tfSecret
+    //     }
+    //   })
+    // }
+
+    const secretJwt =
+      this.config.get('JWT_SECRET');
+
+    // generate Atoken
+    const access_token = await this.jwt.signAsync(
+      { id },
+      {
+        expiresIn: '30s',
+        secret: secretJwt,
+      },
+    );
+    // generate Rtoken
+    const refresh_token =
+      await this.jwt.signAsync(
+        { id },
+        { secret: secretJwt },
+      );
+
+    // save token in DB
+    const expiredAt = new Date();
+    expiredAt.setDate(expiredAt.getDate() + 7); // +7 days
+
+    await this.prisma.token.create({
+      data: {
+        userId: id,
+        token: refresh_token,
+        expiredAt,
+      },
+    });
+
+    // send Rtoken with cookies
+    response.cookie(
+      'refresh_token',
+      refresh_token,
+      {
+        httpOnly: true,
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 1 Week
+      },
+    );
+
+    return {
+      access_token,
     };
   }
 }
