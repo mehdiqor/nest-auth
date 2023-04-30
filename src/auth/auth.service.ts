@@ -66,10 +66,7 @@ export class AuthService {
     }
   }
 
-  async signin(
-    dto: SigninDto,
-    response: Response,
-  ) {
+  async signin(dto: SigninDto) {
     // find user by email
     const user =
       await this.prisma.user.findUnique({
@@ -89,30 +86,32 @@ export class AuthService {
       user.hash,
       dto.password,
     );
+
     // if passwordincorrect throw excepion
     if (!pwMatches)
       throw new ForbiddenException(
         'Credentials incorrect',
       );
 
-    const token = this.signAccessToken(
-      user.id,
-      user.email,
-      response,
-    );
-
-    // QRcode
+    // generate tfa code and QRcode link
     const secret = speakeasy.generateSecret({
       name: 'Nest Client',
     });
+    console.log('secretttttttt', secret);
 
-    // if (user.tfa_secret) return { id: user.id };
+    await this.prisma.user.update({
+      where: {
+        id: user.id,
+      },
+      data: {
+        tfa_secret: secret.base32,
+      },
+    });
 
     return {
-      token,
-      id: user.id,
-      secret: secret.ascii,
       otpauth_url: secret.otpauth_url,
+      message:
+        'Copy this Url in your authenticator app',
     };
   }
 
@@ -151,60 +150,6 @@ export class AuthService {
     } catch (error) {
       throw new UnauthorizedException();
     }
-  }
-
-  async signAccessToken(
-    userId: number,
-    email: string,
-    response: Response,
-  ): Promise<{ access_token: string }> {
-    const payload = {
-      sub: userId,
-      email,
-    };
-    const secretJwt =
-      this.config.get('JWT_SECRET');
-
-    // generate Atoken
-    const access_token = await this.jwt.signAsync(
-      payload,
-      {
-        expiresIn: '30s',
-        secret: secretJwt,
-      },
-    );
-    // generate Rtoken
-    const refresh_token =
-      await this.jwt.signAsync(
-        { id: userId },
-        { secret: secretJwt },
-      );
-
-    // save token in DB
-    const expiredAt = new Date();
-    expiredAt.setDate(expiredAt.getDate() + 7); // +7 days
-
-    await this.prisma.token.create({
-      data: {
-        userId,
-        token: refresh_token,
-        expiredAt,
-      },
-    });
-
-    // send Rtoken with cookies
-    response.cookie(
-      'refresh_token',
-      refresh_token,
-      {
-        httpOnly: true,
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 1 Week
-      },
-    );
-
-    return {
-      access_token,
-    };
   }
 
   async signout(
@@ -299,32 +244,29 @@ export class AuthService {
   }
 
   async twoFactor(
+    userId: number,
     dto: TfaDto,
     response: Response,
   ) {
-    const { id, tfSecret, code } = dto;
-
-    const user = await this.prisma.user.findFirst(
-      {
+    // find user
+    const user =
+      await this.prisma.user.findUnique({
         where: {
-          id,
+          id: userId,
         },
-      },
-    );
+      });
 
     if (!user)
       throw new BadRequestException(
         'invalid credentials',
       );
 
-    if (!tfSecret) {
-      // tfSecret = user.tfa_secret
-    }
-
+    // verify user
+    const secret = user.tfa_secret;
     const verified = speakeasy.totp.verify({
-      tfSecret,
-      encoding: 'asciii',
-      token: code,
+      secret,
+      encoding: 'base32',
+      token: dto.code,
     });
 
     if (!verified)
@@ -332,60 +274,11 @@ export class AuthService {
         'invalid credentials',
       );
 
-    // if (user.tfa_secret === "") {
-    //   await this.prisma.user.update({
-    //     where: {
-    //       id
-    //     },
-    //     data: {
-    //       tfa_secret: tfSecret
-    //     }
-    //   })
-    // }
-
-    const secretJwt =
-      this.config.get('JWT_SECRET');
-
-    // generate Atoken
-    const access_token = await this.jwt.signAsync(
-      { id },
-      {
-        expiresIn: '30s',
-        secret: secretJwt,
-      },
+    return this.signAccessToken(
+      user.id,
+      user.email,
+      response,
     );
-    // generate Rtoken
-    const refresh_token =
-      await this.jwt.signAsync(
-        { id },
-        { secret: secretJwt },
-      );
-
-    // save token in DB
-    const expiredAt = new Date();
-    expiredAt.setDate(expiredAt.getDate() + 7); // +7 days
-
-    await this.prisma.token.create({
-      data: {
-        userId: id,
-        token: refresh_token,
-        expiredAt,
-      },
-    });
-
-    // send Rtoken with cookies
-    response.cookie(
-      'refresh_token',
-      refresh_token,
-      {
-        httpOnly: true,
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 1 Week
-      },
-    );
-
-    return {
-      access_token,
-    };
   }
 
   async googleAuth(
@@ -429,5 +322,59 @@ export class AuthService {
       user.email,
       response,
     );
+  }
+
+  async signAccessToken(
+    userId: number,
+    email: string,
+    response: Response,
+  ): Promise<{ access_token: string }> {
+    const payload = {
+      sub: userId,
+      email,
+    };
+    const secretJwt =
+      this.config.get('JWT_SECRET');
+
+    // generate Atoken
+    const access_token = await this.jwt.signAsync(
+      payload,
+      {
+        expiresIn: '30s',
+        secret: secretJwt,
+      },
+    );
+    // generate Rtoken
+    const refresh_token =
+      await this.jwt.signAsync(
+        { id: userId },
+        { secret: secretJwt },
+      );
+
+    // save token in DB
+    const expiredAt = new Date();
+    expiredAt.setDate(expiredAt.getDate() + 7); // +7 days
+
+    await this.prisma.token.create({
+      data: {
+        userId,
+        token: refresh_token,
+        expiredAt,
+      },
+    });
+
+    // send Rtoken with cookies
+    response.cookie(
+      'refresh_token',
+      refresh_token,
+      {
+        httpOnly: true,
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 1 Week
+      },
+    );
+
+    return {
+      access_token,
+    };
   }
 }

@@ -3,6 +3,8 @@ import {
   Controller,
   HttpCode,
   HttpStatus,
+  Param,
+  ParseIntPipe,
   Post,
   Req,
   Res,
@@ -30,17 +32,13 @@ export class AuthController {
 
   @HttpCode(HttpStatus.OK)
   @Post('signin')
-  signin(
-    @Body() dto: SigninDto,
-    @Res({ passthrough: true })
-    response: Response,
-  ) {
-    return this.authService.signin(dto, response);
+  signin(@Body() dto: SigninDto) {
+    return this.authService.signin(dto);
   }
 
   @HttpCode(HttpStatus.OK)
   @Post('refresh')
-  refresh(
+  refreshToken(
     @Req() request: Request,
     @Res({ passthrough: true })
     response: Response,
@@ -77,13 +75,15 @@ export class AuthController {
   }
 
   @HttpCode(HttpStatus.OK)
-  @Post('two-factor')
+  @Post('two-factor/:id')
   twoFactor(
+    @Param('id', ParseIntPipe) userId: number,
     @Body() dto: TfaDto,
     @Res({ passthrough: true })
     response: Response,
   ) {
     return this.authService.twoFactor(
+      userId,
       dto,
       response,
     );
