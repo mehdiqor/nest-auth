@@ -5,6 +5,7 @@ import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { BookmarkModule } from './bookmark/bookmark.module';
 import { TasksModule } from './tasks/tasks.module';
+import { AppController } from './app.controller';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -16,5 +17,6 @@ import { TasksModule } from './tasks/tasks.module';
     BookmarkModule,
     TasksModule,
   ],
+  controllers: [AppController]
 })
 export class AppModule {}

@@ -7,16 +7,20 @@ import {
 } from '@nestjs/swagger';
 import { Logger } from '@nestjs/common';
 import * as cookieParser from 'cookie-parser';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app =
+    await NestFactory.create<NestExpressApplication>(
+      AppModule,
+    );
 
   app.use(cookieParser());
   app.enableCors({
     origin: [
-      'http://localhost:3000', // for react
-      'http://localhost:8080', // for vue.js
-      'http://localhost:4200', // for angular
+      // for react
+      'http://localhost:3000',
     ],
     credentials: true,
   });
@@ -27,6 +31,11 @@ async function bootstrap() {
       forbidNonWhitelisted: true,
     }),
   );
+
+  // Handlerbar template engine
+  app.useStaticAssets(join(__dirname, "..", "src", 'homepage'));
+  app.setBaseViewsDir(join(__dirname, '..', "src", 'homepage'));
+  app.setViewEngine('hbs');
 
   // Swagger
   const config = new DocumentBuilder()
