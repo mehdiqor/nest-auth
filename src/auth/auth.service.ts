@@ -97,7 +97,6 @@ export class AuthService {
     const secret = speakeasy.generateSecret({
       name: 'Nest Client',
     });
-    console.log('secretttttttt', secret);
 
     await this.prisma.user.update({
       where: {
@@ -355,6 +354,24 @@ export class AuthService {
     const expiredAt = new Date();
     expiredAt.setDate(expiredAt.getDate() + 7); // +7 days
 
+    // check token exist
+    const token =
+      await this.prisma.token.findFirst({
+        where: {
+          userId,
+        },
+      });
+
+    // if token exist, delete it from DB, clean DB from old tokens
+    if (token) {
+      await this.prisma.token.deleteMany({
+        where: {
+          userId,
+        },
+      });
+    }
+
+    // save new token in DB
     await this.prisma.token.create({
       data: {
         userId,
