@@ -11,17 +11,18 @@ datasource db {
 }
 
 model User {
-  id         Int        @id @default(autoincrement())
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime?  @updatedAt()
-  email      String     @unique
-  hash       String
-  firstName  String?
-  lastName   String?
-  bookmarks  Bookmark[]
-  Task       Task[]
-  Token      Token[]
-  tfa_secret String     @default("")
+  id           Int        @id @default(autoincrement())
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime?  @updatedAt()
+  email        String     @unique
+  username     String     @unique
+  hash         String
+  firstName    String?
+  lastName     String?
+  bookmarks    Bookmark[]
+  Token        Token[]
+  tfaSecret    String     @default("")
+  isTfaEnabled Boolean    @default(false)
 
   @@map("users")
 }
@@ -56,22 +57,4 @@ model Bookmark {
   user        User      @relation(fields: [userId], references: [id])
 
   @@map("bookmarks")
-}
-
-model Task {
-  id          Int      @id @default(autoincrement())
-  createdAt   DateTime @default(now())
-  title       String
-  description String?
-  status      Status   @default(OPEN)
-  userId      Int
-  user        User     @relation(fields: [userId], references: [id])
-
-  @@map("tasks")
-}
-
-enum Status {
-  OPEN
-  IN_PROGRES
-  DONE
 }

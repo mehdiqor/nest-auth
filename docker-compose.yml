@@ -10,17 +10,18 @@ services:
       POSTGRES_DB: nest
     networks:
       - mynetwork
-  mongo:
-    image: mongo:latest
-    volumes:
-      - ./data:/data/db
-    networks:
-      - mynetwork
-    ports:
-      - 27027:27017
-    environment:
-      MONGO_USER: mongo
-      MONGO_PASSWORD: 123
+
+  # mongo:
+  #   image: mongo:latest
+  #   volumes:
+  #     - ./data:/data/db
+  #   networks:
+  #     - mynetwork
+  #   ports:
+  #     - 27027:27017
+  #   environment:
+  #     MONGO_USER: mongo
+  #     MONGO_PASSWORD: 123
 
   mailhog:
     image: mailhog/mailhog

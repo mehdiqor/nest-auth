@@ -1,16 +1,16 @@
-import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { PassportStrategy } from '@nestjs/passport';
 import {
   ExtractJwt,
   Strategy,
 } from 'passport-jwt';
+import { PassportStrategy } from '@nestjs/passport';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
-export class JwtStrategy extends PassportStrategy(
+export class Jwt2faStrategy extends PassportStrategy(
   Strategy,
-  'jwt',
+  'jwt-2fa',
 ) {
   constructor(
     config: ConfigService,
@@ -23,18 +23,19 @@ export class JwtStrategy extends PassportStrategy(
     });
   }
 
-  async validate(payload: {
-    sub: number;
-    email: string;
-  }) {
+  async validate(payload: any) {
     const user =
       await this.prisma.user.findUnique({
         where: {
-          id: payload.sub,
+          email: payload.email,
         },
       });
-    delete user.hash;
-    delete user.tfaSecret;
-    return user;
+
+    if (!user.isTfaEnabled) {
+      return user;
+    }
+    if (payload.isTwoFactorAuthenticated) {
+      return user;
+    }
   }
 }

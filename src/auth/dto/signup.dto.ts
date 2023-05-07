@@ -9,6 +9,12 @@ import {
 } from 'class-validator';
 
 export class SignupDto {
+  @IsNotEmpty()
+  @ApiProperty({
+    type: String,
+  })
+  username: string;
+
   @IsEmail()
   @IsNotEmpty()
   @ApiProperty({
@@ -24,12 +30,12 @@ export class SignupDto {
   @IsStrongPassword()
   password: string;
 
-  @ApiProperty({
-    type: String,
-  })
-  @IsString()
-  @IsNotEmpty()
-  password_confirm: string;
+  // @ApiProperty({
+  //   type: String,
+  // })
+  // @IsString()
+  // @IsNotEmpty()
+  // password_confirm: string;
 
   @ApiProperty({
     type: String,

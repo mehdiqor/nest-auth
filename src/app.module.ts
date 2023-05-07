@@ -4,7 +4,6 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { BookmarkModule } from './bookmark/bookmark.module';
-import { TasksModule } from './tasks/tasks.module';
 import { AppController } from './app.controller';
 @Module({
   imports: [
@@ -15,7 +14,6 @@ import { AppController } from './app.controller';
     AuthModule,
     UserModule,
     BookmarkModule,
-    TasksModule,
   ],
   controllers: [AppController]
 })

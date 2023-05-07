@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { EditUserDto } from './dto';
+import { TfaDto } from 'src/auth/dto';
 
 @Injectable()
 export class UserService {
@@ -21,5 +22,27 @@ export class UserService {
 
     delete user.hash;
     return user;
+  }
+
+  async setTfa(secret: string, userId: number) {
+    await this.prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        tfaSecret: secret,
+      },
+    });
+  }
+
+  async turnOnTfa(dto: TfaDto) {
+    await this.prisma.user.update({
+      where: {
+        email: dto.email,
+      },
+      data: {
+        isTfaEnabled: true,
+      },
+    });
   }
 }

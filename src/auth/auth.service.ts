@@ -11,16 +11,23 @@ import {
   SigninDto,
   ForgotPasswordDto,
   ResetPasswordDto,
+  OtpUrlDto,
   TfaDto,
 } from './dto';
 import * as argon from 'argon2';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { Prisma } from '@prisma/client';
-import { Request, Response } from 'express';
+import { Prisma, User } from '@prisma/client';
+import {
+  Request,
+  Response,
+  response,
+} from 'express';
 import { MailerService } from '@nestjs-modules/mailer';
 import * as speakeasy from 'speakeasy';
 import { OAuth2Client } from 'google-auth-library';
+import { UserService } from 'src/user/user.service';
+import { toDataURL } from 'qrcode';
 
 @Injectable()
 export class AuthService {
@@ -29,19 +36,21 @@ export class AuthService {
     private jwt: JwtService,
     private config: ConfigService,
     private mailerService: MailerService,
+    private userService: UserService,
   ) {}
 
   async signup(dto: SignupDto) {
     try {
-      if (dto.password !== dto.password_confirm)
-        throw new BadRequestException(
-          'Passwords do not match',
-        );
+      // if (dto.password !== dto.password_confirm)
+      //   throw new BadRequestException(
+      //     'Passwords do not match',
+      //   );
       // generate the password has
       const hash = await argon.hash(dto.password);
       // save the new user
       const user = await this.prisma.user.create({
         data: {
+          username: dto.username,
           firstName: dto.firstName,
           lastName: dto.lastName,
           email: dto.email,
@@ -66,51 +75,24 @@ export class AuthService {
     }
   }
 
-  async signin(dto: SigninDto) {
-    // find user by email
-    const user =
-      await this.prisma.user.findUnique({
-        where: {
-          email: dto.email,
-        },
-      });
+  async signin(
+    dto: SigninDto,
+    response: Response,
+  ) {
+    const user = await this.findUser(dto.email);
+    await this.checkPassword(user, dto);
 
-    // if user does not exist throw exception
-    if (!user)
-      throw new ForbiddenException(
-        'Credentials incorrect',
-      );
-
-    // compare password
-    const pwMatches = await argon.verify(
-      user.hash,
-      dto.password,
+    const token = await this.signAccessToken(
+      user.id,
+      user.email,
+      response,
     );
 
-    // if passwordincorrect throw excepion
-    if (!pwMatches)
-      throw new ForbiddenException(
-        'Credentials incorrect',
-      );
-
-    // generate tfa code and QRcode link
-    const secret = speakeasy.generateSecret({
-      name: 'Nest Client',
-    });
-
-    await this.prisma.user.update({
-      where: {
-        id: user.id,
-      },
-      data: {
-        tfa_secret: secret.base32,
-      },
-    });
-
+    delete user.hash;
+    delete user.tfaSecret;
     return {
-      otpauth_url: secret.otpauth_url,
-      message:
-        'Copy this Url in your authenticator app',
+      token,
+      user,
     };
   }
 
@@ -242,44 +224,6 @@ export class AuthService {
     };
   }
 
-  async twoFactor(
-    userId: number,
-    dto: TfaDto,
-    response: Response,
-  ) {
-    // find user
-    const user =
-      await this.prisma.user.findUnique({
-        where: {
-          id: userId,
-        },
-      });
-
-    if (!user)
-      throw new BadRequestException(
-        'invalid credentials',
-      );
-
-    // verify user
-    const secret = user.tfa_secret;
-    const verified = speakeasy.totp.verify({
-      secret,
-      encoding: 'base32',
-      token: dto.code,
-    });
-
-    if (!verified)
-      throw new BadRequestException(
-        'invalid credentials',
-      );
-
-    return this.signAccessToken(
-      user.id,
-      user.email,
-      response,
-    );
-  }
-
   async googleAuth(
     gtoken: string,
     response: Response,
@@ -308,6 +252,7 @@ export class AuthService {
     if (!user) {
       user = await this.prisma.user.create({
         data: {
+          username: googleUser.name,
           firstName: googleUser.given_name,
           lastName: googleUser.family_name,
           email: googleUser.email,
@@ -321,6 +266,122 @@ export class AuthService {
       user.email,
       response,
     );
+  }
+
+  // async twoFactor(
+  //   userId: number,
+  //   dto: TfaDto,
+  //   response: Response,
+  // ) {
+  //   // find user
+  //   const user =
+  //     await this.prisma.user.findUnique({
+  //       where: {
+  //         id: userId,
+  //       },
+  //     });
+
+  //   if (!user)
+  //     throw new BadRequestException(
+  //       'invalid credentials',
+  //     );
+
+  //   // verify user
+  //   const secret = user.tfaSecret;
+  //   const verified = speakeasy.totp.verify({
+  //     secret,
+  //     encoding: 'base32',
+  //     token: dto.code,
+  //   });
+
+  //   if (!verified)
+  //     throw new BadRequestException(
+  //       'invalid credentials',
+  //     );
+
+  //   return this.signAccessToken(
+  //     user.id,
+  //     user.email,
+  //     response,
+  //   );
+  // }
+
+  async generateTfa(dto: SigninDto) {
+    // check user exist and compare password
+    const user = await this.findUser(dto.email);
+    await this.checkPassword(user, dto);
+
+    const secret = speakeasy.generateSecret();
+    console.log('secret: ', secret);
+
+    const otpauthUrl = speakeasy.keyuri(
+      user.email,
+      `${user.username}'s NestCode`,
+      secret,
+    );
+    console.log('otpauthUrl: ', otpauthUrl);
+
+    // save user's tfaSecret in DB
+    await this.userService.setTfa(
+      secret,
+      user.id,
+    );
+
+    return {
+      secret,
+      otpauthUrl,
+      message:
+        "Copy this Url in '2fa/qrcode' route to get your QrCode",
+    };
+  }
+
+  async generateQrCode(dto: OtpUrlDto) {
+    return toDataURL(dto.otpAuthUrl);
+  }
+
+  async loginWith2fa(
+    user: User,
+    response: Response,
+  ) {
+    const payload = {
+      email: user.email,
+      isTfaEnabled: !!user.isTfaEnabled,
+      isTwoFactorAuthenticated: true,
+    };
+
+    const token = await this.signAccessToken(
+      user.id,
+      user.email,
+      response,
+    );
+
+    return {
+      email: payload.email,
+      token,
+    };
+  }
+
+  async isTfaCodeValid(dto: TfaDto) {
+    // const verified = speakeasy.totp.verify({
+    //   secret,
+    //   encoding: 'base32',
+    //   token: dto.code,
+    // });
+
+    const { tfaSecret } = await this.findUser(
+      dto.email,
+    );
+
+    const isCodeValid = speakeasy.verify({
+      token: dto.code,
+      secret: tfaSecret,
+    });
+
+    if (!isCodeValid) {
+      throw new UnauthorizedException(
+        'Wrong authentication code',
+      );
+    }
   }
 
   async signAccessToken(
@@ -362,7 +423,7 @@ export class AuthService {
         },
       });
 
-    // if token exist, delete it from DB, clean DB from old tokens
+    // if token exist, delete it from DB (clean DB from old tokens)
     if (token) {
       await this.prisma.token.deleteMany({
         where: {
@@ -393,5 +454,37 @@ export class AuthService {
     return {
       access_token,
     };
+  }
+
+  async findUser(email) {
+    // find user by email
+    const user =
+      await this.prisma.user.findUnique({
+        where: {
+          email,
+        },
+      });
+
+    // if user does not exist throw exception
+    if (!user)
+      throw new ForbiddenException(
+        'Credentials incorrect',
+      );
+
+    return user;
+  }
+
+  async checkPassword(user, dto) {
+    // compare password
+    const pwMatches = await argon.verify(
+      user.hash,
+      dto.password,
+    );
+
+    // // if passwordincorrect throw excepion
+    if (!pwMatches)
+      throw new ForbiddenException(
+        'Credentials incorrect',
+      );
   }
 }

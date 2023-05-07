@@ -19,7 +19,6 @@ export class PrismaService extends PrismaClient {
       this.bookmark.deleteMany(),
       this.token.deleteMany(),
       this.reset.deleteMany(),
-      this.task.deleteMany(),
       this.user.deleteMany(),
     ]);
   }
