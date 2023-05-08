@@ -3,12 +3,9 @@ import {
   Controller,
   HttpCode,
   HttpStatus,
-  Param,
-  ParseIntPipe,
   Post,
   Req,
   Res,
-  UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
@@ -17,7 +14,6 @@ import {
   SigninDto,
   ForgotPasswordDto,
   ResetPasswordDto,
-  OtpUrlDto,
   TfaDto,
 } from './dto';
 import { ApiTags } from '@nestjs/swagger';
@@ -99,31 +95,10 @@ export class AuthController {
     );
   }
 
-  // @HttpCode(HttpStatus.OK)
-  // @Post('2fa/:id')
-  // twoFactor(
-  //   @Param('id', ParseIntPipe) userId: number,
-  //   @Body() dto: TfaDto,
-  //   @Res({ passthrough: true })
-  //   response: Response,
-  // ) {
-  //   return this.authService.twoFactor(
-  //     userId,
-  //     dto,
-  //     response,
-  //   );
-  // }
-
   @HttpCode(HttpStatus.OK)
   @Post('2fa/generate')
   generateTfa(@Body() dto: SigninDto) {
     return this.authService.generateTfa(dto);
-  }
-
-  @HttpCode(HttpStatus.OK)
-  @Post('2fa/qrcode')
-  generateQrCode(@Body() dto: OtpUrlDto) {
-    return this.authService.generateQrCode(dto);
   }
 
   @Post('2fa/turn-on')
@@ -138,29 +113,18 @@ export class AuthController {
     };
   }
 
-  // @HttpCode(200)
-  // @UseGuards(JwtGuard)
-  // @Post('2fa/authenticate')
-  // async authenticate(
-  //   // @Request() request,
-  //   @Body() body,
-  //   @Res({ passthrough: true })
-  //   response: Response,
-  // ) {
-  //   const isCodeValid =
-  //     this.authService.isTfaCodeValid(
-  //       body.tfaCode,
-  //       request.user,
-  //     );
-
-  //   if (!isCodeValid) {
-  //     throw new UnauthorizedException(
-  //       'Wrong authentication code',
-  //     );
-  //   }
-
-  //   return this.authService.loginWith2fa(
-  //     request.user,
-  //   );
-  // }
+  @HttpCode(200)
+  @UseGuards(JwtGuard)
+  @Post('2fa/login')
+  async loginWithTfa(
+    @Body() dto: TfaDto,
+    @Res({ passthrough: true })
+    response: Response,
+  ) {
+    await this.authService.isTfaCodeValid(dto);
+    return this.authService.loginWith2fa(
+      dto,
+      response,
+    );
+  }
 }

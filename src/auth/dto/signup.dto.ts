@@ -30,12 +30,12 @@ export class SignupDto {
   @IsStrongPassword()
   password: string;
 
-  // @ApiProperty({
-  //   type: String,
-  // })
-  // @IsString()
-  // @IsNotEmpty()
-  // password_confirm: string;
+  @ApiProperty({
+    type: String,
+  })
+  @IsString()
+  @IsNotEmpty()
+  password_confirm: string;
 
   @ApiProperty({
     type: String,

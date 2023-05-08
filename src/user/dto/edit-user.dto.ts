@@ -22,6 +22,15 @@ export class EditUserDto {
     required: false,
     type: String,
   })
+  username?: string;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(10)
+  @ApiProperty({
+    required: false,
+    type: String,
+  })
   firstName?: string;
 
   @IsString()

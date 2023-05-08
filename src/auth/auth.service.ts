@@ -2,7 +2,6 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
-  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
@@ -11,23 +10,17 @@ import {
   SigninDto,
   ForgotPasswordDto,
   ResetPasswordDto,
-  OtpUrlDto,
   TfaDto,
 } from './dto';
 import * as argon from 'argon2';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { Prisma, User } from '@prisma/client';
-import {
-  Request,
-  Response,
-  response,
-} from 'express';
+import { Prisma } from '@prisma/client';
+import { Request, Response } from 'express';
 import { MailerService } from '@nestjs-modules/mailer';
 import * as speakeasy from 'speakeasy';
 import { OAuth2Client } from 'google-auth-library';
 import { UserService } from 'src/user/user.service';
-import { toDataURL } from 'qrcode';
 
 @Injectable()
 export class AuthService {
@@ -41,12 +34,14 @@ export class AuthService {
 
   async signup(dto: SignupDto) {
     try {
-      // if (dto.password !== dto.password_confirm)
-      //   throw new BadRequestException(
-      //     'Passwords do not match',
-      //   );
+      if (dto.password !== dto.password_confirm)
+        throw new BadRequestException(
+          'Passwords do not match',
+        );
+
       // generate the password has
       const hash = await argon.hash(dto.password);
+
       // save the new user
       const user = await this.prisma.user.create({
         data: {
@@ -59,6 +54,7 @@ export class AuthService {
       });
 
       delete user.hash;
+      delete user.tfaSecret;
       return user;
     } catch (error) {
       if (
@@ -81,6 +77,12 @@ export class AuthService {
   ) {
     const user = await this.findUser(dto.email);
     await this.checkPassword(user, dto);
+
+    // check 2fa status
+    if (user.isTfaEnabled)
+      throw new BadRequestException(
+        'you have to login with 2FA',
+      );
 
     const token = await this.signAccessToken(
       user.id,
@@ -200,13 +202,7 @@ export class AuthService {
         },
       });
 
-    const user =
-      await this.prisma.user.findUnique({
-        where: {
-          email: reset.email,
-        },
-      });
-    if (!user) throw new NotFoundException();
+    const user = await this.findUser(reset.email);
 
     // update user pass
     const hash = await argon.hash(dto.password);
@@ -268,81 +264,35 @@ export class AuthService {
     );
   }
 
-  // async twoFactor(
-  //   userId: number,
-  //   dto: TfaDto,
-  //   response: Response,
-  // ) {
-  //   // find user
-  //   const user =
-  //     await this.prisma.user.findUnique({
-  //       where: {
-  //         id: userId,
-  //       },
-  //     });
-
-  //   if (!user)
-  //     throw new BadRequestException(
-  //       'invalid credentials',
-  //     );
-
-  //   // verify user
-  //   const secret = user.tfaSecret;
-  //   const verified = speakeasy.totp.verify({
-  //     secret,
-  //     encoding: 'base32',
-  //     token: dto.code,
-  //   });
-
-  //   if (!verified)
-  //     throw new BadRequestException(
-  //       'invalid credentials',
-  //     );
-
-  //   return this.signAccessToken(
-  //     user.id,
-  //     user.email,
-  //     response,
-  //   );
-  // }
-
   async generateTfa(dto: SigninDto) {
     // check user exist and compare password
     const user = await this.findUser(dto.email);
     await this.checkPassword(user, dto);
 
-    const secret = speakeasy.generateSecret();
-    console.log('secret: ', secret);
-
-    const otpauthUrl = speakeasy.keyuri(
-      user.email,
-      `${user.username}'s NestCode`,
-      secret,
-    );
-    console.log('otpauthUrl: ', otpauthUrl);
+    const secret = speakeasy.generateSecret({
+      name: `${user.username}'s NestCode`,
+    });
 
     // save user's tfaSecret in DB
     await this.userService.setTfa(
-      secret,
+      secret.base32,
       user.id,
     );
 
     return {
-      secret,
-      otpauthUrl,
+      secret: secret.base32,
+      link: secret.otpauth_url,
       message:
-        "Copy this Url in '2fa/qrcode' route to get your QrCode",
+        "Copy this Url in QrCode generatore to get your QrCode",
     };
   }
 
-  async generateQrCode(dto: OtpUrlDto) {
-    return toDataURL(dto.otpAuthUrl);
-  }
-
   async loginWith2fa(
-    user: User,
+    dto: TfaDto,
     response: Response,
   ) {
+    const user = await this.findUser(dto.email);
+
     const payload = {
       email: user.email,
       isTfaEnabled: !!user.isTfaEnabled,
@@ -355,26 +305,23 @@ export class AuthService {
       response,
     );
 
+    delete user.hash;
+    delete user.tfaSecret;
     return {
-      email: payload.email,
       token,
+      user,
     };
   }
 
   async isTfaCodeValid(dto: TfaDto) {
-    // const verified = speakeasy.totp.verify({
-    //   secret,
-    //   encoding: 'base32',
-    //   token: dto.code,
-    // });
-
     const { tfaSecret } = await this.findUser(
       dto.email,
     );
 
-    const isCodeValid = speakeasy.verify({
-      token: dto.code,
+    const isCodeValid = speakeasy.totp.verify({
       secret: tfaSecret,
+      encoding: 'base32',
+      token: dto.code,
     });
 
     if (!isCodeValid) {
