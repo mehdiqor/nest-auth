@@ -111,6 +111,18 @@ export class AuthController {
     };
   }
 
+  @Post('2fa/turn-off')
+  @UseGuards(JwtGuard)
+  async turnOffTfa(@Body() dto: TfaDto) {
+    await this.authService.isTfaCodeValid(dto);
+    await this.userService.turnOffTfa(dto);
+
+    return {
+      message:
+        'Two Factor Authentication is disabled!',
+    };
+  }
+
   @HttpCode(200)
   @UseGuards(JwtGuard)
   @Post('2fa/login')

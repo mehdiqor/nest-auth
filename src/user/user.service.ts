@@ -45,4 +45,15 @@ export class UserService {
       },
     });
   }
+
+  async turnOffTfa(dto: TfaDto) {
+    await this.prisma.user.update({
+      where: {
+        email: dto.email,
+      },
+      data: {
+        isTfaEnabled: false,
+      },
+    });
+  }
 }
