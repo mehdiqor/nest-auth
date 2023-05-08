@@ -1,4 +1,3 @@
-import { ApiProperty } from '@nestjs/swagger';
 import {
   IsEmail,
   IsNotEmpty,
@@ -7,8 +6,5 @@ import {
 export class ForgotPasswordDto {
   @IsEmail()
   @IsNotEmpty()
-  @ApiProperty({
-    type: String,
-  })
   email: string;
 }

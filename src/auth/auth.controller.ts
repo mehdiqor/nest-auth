@@ -16,12 +16,10 @@ import {
   ResetPasswordDto,
   TfaDto,
 } from './dto';
-import { ApiTags } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import { UserService } from 'src/user/user.service';
 import { JwtGuard } from './guard';
 
-@ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(

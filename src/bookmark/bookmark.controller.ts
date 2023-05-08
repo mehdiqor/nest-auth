@@ -18,13 +18,7 @@ import {
   CreateBookmarkDto,
   EditBookmarkDto,
 } from './dto';
-import {
-  ApiBearerAuth,
-  ApiTags,
-} from '@nestjs/swagger';
 
-@ApiTags('Bookmark')
-@ApiBearerAuth('Token-Please')
 @UseGuards(JwtGuard)
 @Controller('bookmarks')
 export class BookmarkController {
