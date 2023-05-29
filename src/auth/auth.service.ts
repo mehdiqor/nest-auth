@@ -21,6 +21,11 @@ import { MailerService } from '@nestjs-modules/mailer';
 import * as speakeasy from 'speakeasy';
 import { OAuth2Client } from 'google-auth-library';
 import { UserService } from 'src/user/user.service';
+import {
+  ClientProxyFactory,
+  MessagePattern,
+  Transport,
+} from '@nestjs/microservices';
 
 @Injectable()
 export class AuthService {
@@ -39,7 +44,7 @@ export class AuthService {
           'Passwords do not match',
         );
 
-      // generate the password has
+      // generate the password hash
       const hash = await argon.hash(dto.password);
 
       // save the new user
@@ -62,19 +67,14 @@ export class AuthService {
         Prisma.PrismaClientKnownRequestError
       ) {
         if (error.code === 'P2002') {
-          throw new ForbiddenException(
-            'Credentials taken',
-          );
+          throw new ForbiddenException('Credentials taken');
         }
       }
       throw error;
     }
   }
 
-  async signin(
-    dto: SigninDto,
-    response: Response,
-  ) {
+  async signin(dto: SigninDto, response: Response) {
     const user = await this.findUser(dto.email);
     await this.checkPassword(user, dto);
 
@@ -98,56 +98,44 @@ export class AuthService {
     };
   }
 
-  async refreshToken(
-    request: Request,
-    response: Response,
-  ) {
+  async refreshToken(request: Request, response: Response) {
     try {
-      const secretJwt =
-        this.config.get('JWT_SECRET');
+      const secretJwt = this.config.get('JWT_SECRET');
 
-      const refreshToken =
-        request.cookies['refresh_token'];
+      const refreshToken = request.cookies['refresh_token'];
 
-      const { id, email } =
-        await this.jwt.verifyAsync(refreshToken, {
+      const { id, email } = await this.jwt.verifyAsync(
+        refreshToken,
+        {
           secret: secretJwt,
-        });
+        },
+      );
 
       // check token exist
-      const tokenEntity =
-        await this.prisma.token.findFirst({
+      const tokenEntity = await this.prisma.token.findFirst(
+        {
           where: {
             userId: id,
             expiredAt: { gt: new Date() },
           },
-        });
-      if (!tokenEntity)
-        throw new UnauthorizedException();
-
-      return this.signAccessToken(
-        id,
-        email,
-        response,
+        },
       );
+      if (!tokenEntity) throw new UnauthorizedException();
+
+      return this.signAccessToken(id, email, response);
     } catch (error) {
       throw new UnauthorizedException();
     }
   }
 
-  async signout(
-    request: Request,
-    response: Response,
-  ) {
+  async signout(request: Request, response: Response) {
     // remove from DB
-    const refreshToken =
-      request.cookies['refresh_token'];
-    const { id } =
-      await this.prisma.token.findFirst({
-        where: {
-          token: refreshToken,
-        },
-      });
+    const refreshToken = request.cookies['refresh_token'];
+    const { id } = await this.prisma.token.findFirst({
+      where: {
+        token: refreshToken,
+      },
+    });
     await this.prisma.token.delete({
       where: {
         id,
@@ -195,12 +183,11 @@ export class AuthService {
       );
 
     // check exist user
-    const reset =
-      await this.prisma.reset.findFirst({
-        where: {
-          token: dto.token,
-        },
-      });
+    const reset = await this.prisma.reset.findFirst({
+      where: {
+        token: dto.token,
+      },
+    });
 
     const user = await this.findUser(reset.email);
 
@@ -220,10 +207,7 @@ export class AuthService {
     };
   }
 
-  async googleAuth(
-    gtoken: string,
-    response: Response,
-  ) {
+  async googleAuth(gtoken: string, response: Response) {
     const clientId = this.config.get('GOOGLE_ID');
     const client = new OAuth2Client(clientId);
 
@@ -234,8 +218,7 @@ export class AuthService {
 
     const googleUser = ticket.getPayload();
 
-    if (!googleUser)
-      throw new UnauthorizedException();
+    if (!googleUser) throw new UnauthorizedException();
 
     let user = await this.prisma.user.findUnique({
       where: {
@@ -274,23 +257,17 @@ export class AuthService {
     });
 
     // save user's tfaSecret in DB
-    await this.userService.setTfa(
-      secret.base32,
-      user.id,
-    );
+    await this.userService.setTfa(secret.base32, user.id);
 
     return {
       secret: secret.base32,
       link: secret.otpauth_url,
       message:
-        "Copy this Url in QrCode generatore to get your QrCode",
+        'Copy this Url in QrCode generatore to get your QrCode',
     };
   }
 
-  async loginWith2fa(
-    dto: TfaDto,
-    response: Response,
-  ) {
+  async loginWith2fa(dto: TfaDto, response: Response) {
     const user = await this.findUser(dto.email);
 
     const payload = {
@@ -314,9 +291,7 @@ export class AuthService {
   }
 
   async isTfaCodeValid(dto: TfaDto) {
-    const { tfaSecret } = await this.findUser(
-      dto.email,
-    );
+    const { tfaSecret } = await this.findUser(dto.email);
 
     const isCodeValid = speakeasy.totp.verify({
       secret: tfaSecret,
@@ -340,35 +315,29 @@ export class AuthService {
       sub: userId,
       email,
     };
-    const secretJwt =
-      this.config.get('JWT_SECRET');
+    const secretJwt = this.config.get('JWT_SECRET');
 
     // generate Atoken
-    const access_token = await this.jwt.signAsync(
-      payload,
-      {
-        expiresIn: '30s',
-        secret: secretJwt,
-      },
-    );
+    const access_token = await this.jwt.signAsync(payload, {
+      expiresIn: '30s',
+      secret: secretJwt,
+    });
     // generate Rtoken
-    const refresh_token =
-      await this.jwt.signAsync(
-        { id: userId },
-        { secret: secretJwt },
-      );
+    const refresh_token = await this.jwt.signAsync(
+      { id: userId },
+      { secret: secretJwt },
+    );
 
     // save token in DB
     const expiredAt = new Date();
     expiredAt.setDate(expiredAt.getDate() + 7); // +7 days
 
     // check token exist
-    const token =
-      await this.prisma.token.findFirst({
-        where: {
-          userId,
-        },
-      });
+    const token = await this.prisma.token.findFirst({
+      where: {
+        userId,
+      },
+    });
 
     // if token exist, delete it from DB (clean DB from old tokens)
     if (token) {
@@ -389,34 +358,27 @@ export class AuthService {
     });
 
     // send Rtoken with cookies
-    response.cookie(
-      'refresh_token',
-      refresh_token,
-      {
-        httpOnly: true,
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 1 Week
-      },
-    );
+    response.cookie('refresh_token', refresh_token, {
+      httpOnly: true,
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 1 Week
+    });
 
     return {
       access_token,
     };
   }
 
-  async findUser(email) {
+  async findUser(email: string) {
     // find user by email
-    const user =
-      await this.prisma.user.findUnique({
-        where: {
-          email,
-        },
-      });
+    const user = await this.prisma.user.findUnique({
+      where: {
+        email,
+      },
+    });
 
     // if user does not exist throw exception
     if (!user)
-      throw new ForbiddenException(
-        'Credentials incorrect',
-      );
+      throw new ForbiddenException('Credentials incorrect');
 
     return user;
   }
@@ -430,8 +392,6 @@ export class AuthService {
 
     // // if passwordincorrect throw excepion
     if (!pwMatches)
-      throw new ForbiddenException(
-        'Credentials incorrect',
-      );
+      throw new ForbiddenException('Credentials incorrect');
   }
 }

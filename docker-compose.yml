@@ -10,25 +10,21 @@ services:
       POSTGRES_DB: nest
     networks:
       - mynetwork
-
-  # mongo:
-  #   image: mongo:latest
-  #   volumes:
-  #     - ./data:/data/db
-  #   networks:
-  #     - mynetwork
-  #   ports:
-  #     - 27027:27017
-  #   environment:
-  #     MONGO_USER: mongo
-  #     MONGO_PASSWORD: 123
-
   mailhog:
     image: mailhog/mailhog
-    container_name: 'mailhog'
     ports:
       - '1025:1025'
       - '8025:8025'
+  rabbitmq:
+    image: rabbitmq:3-management
+    hostname: 'rabbitmq'
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+    volumes:
+      - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/mnesia/
+      - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+    restart: always
 
   # this is for e2e test
   # test-db:

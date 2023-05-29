@@ -1,16 +1,17 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { EditUserDto } from './dto';
 import { TfaDto } from 'src/auth/dto';
+import {
+  ClientProxyFactory,
+  Transport,
+} from '@nestjs/microservices';
 
 @Injectable()
 export class UserService {
   constructor(private prisma: PrismaService) {}
 
-  async editUser(
-    userId: number,
-    dto: EditUserDto,
-  ) {
+  async editUser(userId: number, dto: EditUserDto) {
     const user = await this.prisma.user.update({
       where: {
         id: userId,
@@ -55,5 +56,20 @@ export class UserService {
         isTfaEnabled: false,
       },
     });
+  }
+
+  async getFilmData() {
+    const authMicroservice = ClientProxyFactory.create({
+      transport: Transport.RMQ,
+      options: {
+        urls: ['amqp://localhost:5673'],
+        queue: 'auth_queue',
+      },
+    });
+
+    const data = { hi: 'hello' };
+    const result = authMicroservice.send('film', data);
+
+    return result;
   }
 }
