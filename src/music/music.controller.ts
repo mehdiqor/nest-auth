@@ -5,6 +5,7 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { MusicService } from './music.service';
 import {
@@ -15,9 +16,13 @@ import {
   UpdateArtistDto,
   UpdateTrackDto,
 } from './dto';
-import { ApiConsumes, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import { JwtGuard } from 'src/auth/guard';
+
 
 @ApiTags('Music')
+@ApiBearerAuth()
+@UseGuards(JwtGuard)
 @Controller('music')
 export class MusicController {
   constructor(
@@ -52,12 +57,12 @@ export class MusicController {
   }
 
   @ApiConsumes('application/x-www-form-urlencoded')
-  @Post('update-album')
+  @Patch('update-album')
   updateAlbumById(@Body() dto: UpdateAlbumDto) {
     return this.musicService.updateAlbumById(dto);
   }
 
-  @Post('remove-album')
+  @Delete('remove-album')
   removeAlbumById(@Query('id') id: string) {
     return this.musicService.removeAlbumById(id);
   }
@@ -74,13 +79,13 @@ export class MusicController {
     return this.musicService.addTrack(dto);
   }
 
-  @Post('update-track')
+  @Patch('update-track')
   @ApiConsumes('application/x-www-form-urlencoded')
   updateTrack(@Body() dto: UpdateTrackDto) {
     return this.musicService.updateTrack(dto);
   }
 
-  @Post('remove-track')
+  @Delete('remove-track')
   removeTrack(
     @Query('trackName') trackName: string,
     @Query('albumName') albumName: string,

@@ -1,3 +1,4 @@
+import { ApiProperty } from '@nestjs/swagger';
 import {
   IsOptional,
   IsString,
@@ -11,15 +12,24 @@ export class EditBookmarkDto {
   @IsOptional()
   @MinLength(4)
   @MaxLength(10)
+  @ApiProperty({
+    required: false,
+  })
   title?: string;
 
   @IsString()
   @IsOptional()
   @MinLength(4)
   @MaxLength(20)
+  @ApiProperty({
+    required: false,
+  })
   description?: string;
 
   @IsUrl()
   @IsOptional()
+  @ApiProperty({
+    required: false,
+  })
   link?: string;
 }

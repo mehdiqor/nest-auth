@@ -19,9 +19,13 @@ import {
 import { Request, Response } from 'express';
 import { UserService } from 'src/user/user.service';
 import { JwtGuard } from './guard';
-import { ApiConsumes, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiConsumes,
+  ApiTags,
+} from '@nestjs/swagger';
 
-@ApiTags('Music')
+@ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -47,7 +51,7 @@ export class AuthController {
   }
 
   @HttpCode(HttpStatus.OK)
-  @Post('refresh')
+  @Post('refresh-token')
   @ApiConsumes('application/x-www-form-urlencoded')
   refreshToken(
     @Req() request: Request,
@@ -69,14 +73,14 @@ export class AuthController {
   }
 
   @HttpCode(HttpStatus.OK)
-  @Post('forgot')
+  @Post('forgot-password')
   @ApiConsumes('application/x-www-form-urlencoded')
   forgotPassword(@Body() dto: ForgotPasswordDto) {
     return this.authService.forgotPassword(dto);
   }
 
   @HttpCode(HttpStatus.OK)
-  @Post('reset')
+  @Post('reset-password')
   @ApiConsumes('application/x-www-form-urlencoded')
   resetPassword(@Body() dto: ResetPasswordDto) {
     return this.authService.resetPassword(dto);
@@ -102,6 +106,7 @@ export class AuthController {
 
   @Post('2fa/turn-on')
   @UseGuards(JwtGuard)
+  @ApiBearerAuth()
   @ApiConsumes('application/x-www-form-urlencoded')
   async turnOnTfa(@Body() dto: TfaDto) {
     await this.authService.isTfaCodeValid(dto);
@@ -114,6 +119,7 @@ export class AuthController {
 
   @Post('2fa/turn-off')
   @UseGuards(JwtGuard)
+  @ApiBearerAuth()
   @ApiConsumes('application/x-www-form-urlencoded')
   async turnOffTfa(@Body() dto: TfaDto) {
     await this.authService.isTfaCodeValid(dto);
@@ -125,8 +131,9 @@ export class AuthController {
   }
 
   @HttpCode(200)
-  @UseGuards(JwtGuard)
   @Post('2fa/login')
+  @UseGuards(JwtGuard)
+  @ApiBearerAuth()
   @ApiConsumes('application/x-www-form-urlencoded')
   async loginWithTfa(
     @Body() dto: TfaDto,

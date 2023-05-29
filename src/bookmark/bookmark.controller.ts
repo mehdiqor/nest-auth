@@ -14,34 +14,28 @@ import {
 import { JwtGuard } from '../auth/guard';
 import { BookmarkService } from './bookmark.service';
 import { GetUser } from '../auth/decorator';
-import {
-  CreateBookmarkDto,
-  EditBookmarkDto,
-} from './dto';
+import { CreateBookmarkDto, EditBookmarkDto } from './dto';
+import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Bookmarks')
+@ApiBearerAuth()
 @UseGuards(JwtGuard)
 @Controller('bookmarks')
 export class BookmarkController {
-  constructor(
-    private bookmarkService: BookmarkService,
-  ) {}
+  constructor(private bookmarkService: BookmarkService) {}
 
   @Post()
+  @ApiConsumes('application/x-www-form-urlencoded')
   createBookmark(
     @GetUser('id') userId: number,
     @Body() dto: CreateBookmarkDto,
   ) {
-    return this.bookmarkService.createBookmark(
-      userId,
-      dto,
-    );
+    return this.bookmarkService.createBookmark(userId, dto);
   }
 
   @Get()
   getBookmarks(@GetUser('id') userId: number) {
-    return this.bookmarkService.getBookmarks(
-      userId,
-    );
+    return this.bookmarkService.getBookmarks(userId);
   }
 
   @Get(':id')
@@ -56,6 +50,7 @@ export class BookmarkController {
   }
 
   @Patch(':id')
+  @ApiConsumes('application/x-www-form-urlencoded')
   editBookmarkById(
     @GetUser('id') userId: number,
     @Param('id', ParseIntPipe) bookmarkId: number,
