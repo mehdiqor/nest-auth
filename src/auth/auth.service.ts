@@ -21,11 +21,6 @@ import { MailerService } from '@nestjs-modules/mailer';
 import * as speakeasy from 'speakeasy';
 import { OAuth2Client } from 'google-auth-library';
 import { UserService } from 'src/user/user.service';
-import {
-  ClientProxyFactory,
-  MessagePattern,
-  Transport,
-} from '@nestjs/microservices';
 
 @Injectable()
 export class AuthService {
@@ -319,7 +314,7 @@ export class AuthService {
 
     // generate Atoken
     const access_token = await this.jwt.signAsync(payload, {
-      expiresIn: '30s',
+      expiresIn: '5m',
       secret: secretJwt,
     });
     // generate Rtoken

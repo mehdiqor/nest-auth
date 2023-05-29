@@ -32,9 +32,4 @@ export class UserController {
   ) {
     return this.userService.editUser(userId, dto);
   }
-
-  @Get('film-data')
-  getFilmData() {
-    return this.userService.getFilmData();
-  }
 }
