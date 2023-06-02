@@ -7,6 +7,7 @@ import { BookmarkModule } from './bookmark/bookmark.module';
 import { MusicModule } from './music/music.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { ElasticModule } from './elastic/elastic.module';
 @Module({
   imports: [
     ServeStaticModule.forRoot({
@@ -20,6 +21,7 @@ import { join } from 'path';
     UserModule,
     BookmarkModule,
     MusicModule,
+    ElasticModule,
   ],
 })
 export class AppModule {}
