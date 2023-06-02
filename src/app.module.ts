@@ -9,6 +9,7 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { ElasticModule } from './elastic/elastic.module';
 import { FilmModule } from './film/film.module';
+import { SpotifyModule } from './spotify/spotify.module';
 @Module({
   imports: [
     ServeStaticModule.forRoot({
@@ -24,6 +25,7 @@ import { FilmModule } from './film/film.module';
     MusicModule,
     ElasticModule,
     FilmModule,
+    SpotifyModule
   ],
 })
 export class AppModule {}
