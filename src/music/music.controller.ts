@@ -5,7 +5,9 @@ import {
   Patch,
   Post,
   Query,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { MusicService } from './music.service';
 import {
@@ -16,9 +18,13 @@ import {
   UpdateArtistDto,
   UpdateTrackDto,
 } from './dto';
-import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiConsumes,
+  ApiTags,
+} from '@nestjs/swagger';
 import { JwtGuard } from 'src/auth/guard';
-
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @ApiTags('Music')
 @ApiBearerAuth()
@@ -68,15 +74,13 @@ export class MusicController {
   }
 
   @Post('add-track')
-  @ApiConsumes('application/x-www-form-urlencoded')
-  // @ApiConsumes('multipart/form-data')
-  //   @UseInterceptors(FileInterceptor('track'))
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('track'))
   addTrack(
     @Body() dto: AddTrackDto,
-    // @UploadedFile()
-    // file: Express.Multer.File,
+    @UploadedFile() file: Express.Multer.File,
   ) {
-    return this.musicService.addTrack(dto);
+    return this.musicService.addTrack(dto, file);
   }
 
   @Patch('update-track')

@@ -24,7 +24,6 @@ services:
     volumes:
       - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/mnesia/
       - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
-    restart: always
 
   # this is for e2e test
   # test-db:

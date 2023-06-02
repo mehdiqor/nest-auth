@@ -35,9 +35,9 @@ export class AddTrackDto {
   @ApiProperty({ required: false })
   youtube_link?: string;
 
-  // @ApiProperty({
-  //   type: 'string',
-  //   format: 'binary',
-  // })
-  // track: Express.Multer.File;
+  @ApiProperty({
+    type: 'string',
+    format: 'binary',
+  })
+  track: Express.Multer.File;
 }
