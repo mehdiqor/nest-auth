@@ -10,6 +10,7 @@ import {
   UpdateDirectorDto,
   UpdateMovieDto,
 } from './dto';
+import { OnEvent } from '@nestjs/event-emitter';
 
 @Injectable()
 export class FilmService {
@@ -61,6 +62,15 @@ export class FilmService {
     return result;
   }
 
+  @OnEvent('admin.filmData')
+  getAllData(
+    message: string,
+    resolve: (data: any) => void,
+  ) {
+    const result = this.sendData('all-films', message);    
+    resolve(result);
+  }
+
   sendData(address: string, data) {
     const authMicroservice = ClientProxyFactory.create({
       transport: Transport.RMQ,
@@ -71,7 +81,6 @@ export class FilmService {
     });
 
     const result = authMicroservice.send(address, data);
-
     return result;
   }
 }

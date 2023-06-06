@@ -34,10 +34,21 @@ export class ElasticService {
   @OnEvent('admin.indexCrud')
   indexCrud(
     dto: ElasticIndexDto,
-    resolve: (albums: any) => void,
+    resolve: (data: any) => void,
   ) {
     const address = `${dto.operation}-index`;
     const result = this.sendData(address, dto.indexName);
+
+    resolve(result);
+  }
+
+  @OnEvent('admin.elasticData')
+  getAllDocuments(
+    index: string,
+    resolve: (data: any) => void,
+  ) {
+    const address = 'all-documents';
+    const result = this.sendData(address, index);
 
     resolve(result);
   }

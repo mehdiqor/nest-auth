@@ -1,9 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-} from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 
 export class SearchDto {
   @IsString()
@@ -12,7 +8,7 @@ export class SearchDto {
   index: string;
 
   @IsString()
-  @IsOptional()
-  @ApiProperty({ required: false })
-  search?: string;
+  @IsNotEmpty()
+  @ApiProperty()
+  search: string;
 }

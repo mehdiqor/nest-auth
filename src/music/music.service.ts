@@ -15,6 +15,7 @@ import { ConfigService } from '@nestjs/config';
 import getAudioDurationInSeconds from 'get-audio-duration';
 import * as path from 'path';
 import * as fs from 'fs';
+import { OnEvent } from '@nestjs/event-emitter';
 
 @Injectable()
 export class MusicService {
@@ -135,6 +136,15 @@ export class MusicService {
     return result;
   }
 
+  @OnEvent('admin.musicData')
+  getAllData(
+    message: string,
+    resolve: (data: any) => void,
+  ) {
+    const result = this.sendData('all-musics', message);
+    resolve(result);
+  }
+
   sendData(address: string, data) {
     const authMicroservice = ClientProxyFactory.create({
       transport: Transport.RMQ,
@@ -145,7 +155,6 @@ export class MusicService {
     });
 
     const result = authMicroservice.send(address, data);
-
     return result;
   }
 

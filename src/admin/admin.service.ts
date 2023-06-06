@@ -17,4 +17,40 @@ export class AdminService {
 
     return result;
   }
+
+  async getAllMusics(message: string) {
+    const musicData = await new Promise((resolve) => {
+      this.eventEmitter.emit(
+        'admin.musicData',
+        message,
+        resolve,
+      );
+    });
+
+    return musicData;
+  }
+
+  async getAllFilms(message: string) {
+    const filmData = await new Promise((resolve) => {
+      this.eventEmitter.emit(
+        'admin.filmData',
+        message,
+        resolve,
+      );
+    });
+
+    return filmData;
+  }
+
+  async getAllElasticData(index: string) {
+    const filmData = await new Promise((resolve) => {
+      this.eventEmitter.emit(
+        'admin.elasticData',
+        index,
+        resolve,
+      );
+    });
+
+    return filmData;
+  }
 }

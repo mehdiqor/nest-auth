@@ -64,6 +64,5 @@ async function bootstrap() {
   // Logger
   const logger = new Logger();
   logger.log(`Application runnig -> ${host}:${port}`);
-  logger.log('Microservice is listening');
 }
 bootstrap();
