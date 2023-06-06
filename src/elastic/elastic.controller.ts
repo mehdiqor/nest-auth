@@ -9,7 +9,7 @@ import { ElasticService } from './elastic.service';
 import { SearchDto } from './dto';
 import { ApiConsumes, ApiTags } from '@nestjs/swagger';
 
-@ApiTags('Elastic-Search')
+@ApiTags('ElasticSearch')
 @Controller('elastic')
 export class ElasticController {
   constructor(

@@ -10,6 +10,7 @@ import { join } from 'path';
 import { ElasticModule } from './elastic/elastic.module';
 import { FilmModule } from './film/film.module';
 import { SpotifyModule } from './spotify/spotify.module';
+import { AdminModule } from './admin/admin.module';
 @Module({
   imports: [
     ServeStaticModule.forRoot({
@@ -25,7 +26,8 @@ import { SpotifyModule } from './spotify/spotify.module';
     MusicModule,
     ElasticModule,
     FilmModule,
-    SpotifyModule
+    SpotifyModule,
+    AdminModule
   ],
 })
 export class AppModule {}

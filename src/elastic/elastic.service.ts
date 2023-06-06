@@ -4,28 +4,42 @@ import {
   Transport,
 } from '@nestjs/microservices';
 import { SearchDto } from './dto';
+import { OnEvent } from '@nestjs/event-emitter';
+import { ElasticIndexDto } from 'src/admin/dto';
 
 @Injectable()
 export class ElasticService {
-  async wordSearch(dto: SearchDto) {
+  wordSearch(dto: SearchDto) {
     const address = 'word-search';
 
     const result = this.sendData(address, dto);
     return result;
   }
 
-  async regexpSearch(dto: SearchDto) {
+  regexpSearch(dto: SearchDto) {
     const address = 'regexp-search';
 
     const result = this.sendData(address, dto);
     return result;
   }
 
-  async movieSearch(search: string) {
+  movieSearch(search: string) {
     const address = 'movie-search';
 
     const result = this.sendData(address, search);
     return result;
+  }
+
+  // Create - Check Exist - Remove Index
+  @OnEvent('admin.indexCrud')
+  indexCrud(
+    dto: ElasticIndexDto,
+    resolve: (albums: any) => void,
+  ) {
+    const address = `${dto.operation}-index`;
+    const result = this.sendData(address, dto.indexName);
+
+    resolve(result);
   }
 
   sendData(address: string, data) {
