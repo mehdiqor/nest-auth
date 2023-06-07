@@ -11,8 +11,16 @@ import { ElasticModule } from './elastic/elastic.module';
 import { FilmModule } from './film/film.module';
 import { SpotifyModule } from './spotify/spotify.module';
 import { AdminModule } from './admin/admin.module';
+import { CacheInterceptor, CacheModule } from '@nestjs/cache-manager';
+import { redisStore } from 'cache-manager-redis-yet';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 @Module({
   imports: [
+    CacheModule.register({
+      isGlobal: true,
+      store: redisStore,
+      url: process.env.REDIS_HOST,
+    }),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'uploads'),
     }),
@@ -28,6 +36,12 @@ import { AdminModule } from './admin/admin.module';
     FilmModule,
     SpotifyModule,
     AdminModule
+  ],
+  providers: [
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: CacheInterceptor,
+    },
   ],
 })
 export class AppModule {}

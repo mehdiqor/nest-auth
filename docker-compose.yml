@@ -25,7 +25,17 @@ services:
     volumes:
       - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/mnesia/
       - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
-
+  redis:
+    image: redis:6.0
+    ports:
+      - 6378:6379
+  redis-commander:
+    hostname: redis-commander
+    image: ghcr.io/joeferner/redis-commander:latest
+    environment:
+      - REDIS_HOSTS=redis://localhost:6378
+    ports:
+      - '8082:8081'
   # this is for e2e test
   # test-db:
   #   image: postgres:13
