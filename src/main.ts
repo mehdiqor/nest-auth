@@ -4,9 +4,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { Logger } from '@nestjs/common';
 import * as cookieParser from 'cookie-parser';
 import {
-  ClientProxy,
   ClientProxyFactory,
-  MicroserviceOptions,
   Transport,
 } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';

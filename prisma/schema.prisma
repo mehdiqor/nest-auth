@@ -23,6 +23,7 @@ model User {
   Token        Token[]
   tfaSecret    String     @default("")
   isTfaEnabled Boolean    @default(false)
+  role         String     @default("USER")
 
   @@map("users")
 }

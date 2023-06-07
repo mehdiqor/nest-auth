@@ -53,6 +53,7 @@
     "google-auth-library": "^8.7.0",
     "googleapis": "^118.0.0",
     "multer": "^1.4.5-lts.1",
+    "nest-auth": "^0.0.1",
     "nodemailer": "^6.9.1",
     "passport": "^0.6.0",
     "passport-jwt": "^4.0.1",

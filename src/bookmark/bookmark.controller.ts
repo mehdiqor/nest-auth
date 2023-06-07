@@ -11,20 +11,26 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { JwtGuard } from '../auth/guard';
+import { JwtGuard, RolesGuard } from '../auth/guard';
 import { BookmarkService } from './bookmark.service';
-import { GetUser } from '../auth/decorator';
+import { GetUser, Roles } from '../auth/decorator';
 import { CreateBookmarkDto, EditBookmarkDto } from './dto';
-import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiConsumes,
+  ApiTags,
+} from '@nestjs/swagger';
+import { RolesEnum } from 'src/auth/dto';
 
 @ApiTags('Bookmarks')
 @ApiBearerAuth()
-@UseGuards(JwtGuard)
+@UseGuards(JwtGuard, RolesGuard)
 @Controller('bookmarks')
 export class BookmarkController {
   constructor(private bookmarkService: BookmarkService) {}
 
   @Post()
+  @Roles(RolesEnum.USER)
   @ApiConsumes('application/x-www-form-urlencoded')
   createBookmark(
     @GetUser('id') userId: number,
@@ -34,11 +40,13 @@ export class BookmarkController {
   }
 
   @Get()
+  @Roles(RolesEnum.USER)
   getBookmarks(@GetUser('id') userId: number) {
     return this.bookmarkService.getBookmarks(userId);
   }
 
   @Get(':id')
+  @Roles(RolesEnum.USER)
   getBookmarkById(
     @GetUser('id') userId: number,
     @Param('id', ParseIntPipe) bookmarkId: number,
@@ -50,6 +58,7 @@ export class BookmarkController {
   }
 
   @Patch(':id')
+  @Roles(RolesEnum.USER)
   @ApiConsumes('application/x-www-form-urlencoded')
   editBookmarkById(
     @GetUser('id') userId: number,
@@ -65,6 +74,7 @@ export class BookmarkController {
 
   @HttpCode(HttpStatus.NO_CONTENT)
   @Delete(':id')
+  @Roles(RolesEnum.USER)
   deleteBookmarkById(
     @GetUser('id') userId: number,
     @Param('id', ParseIntPipe) bookmarkId: number,
