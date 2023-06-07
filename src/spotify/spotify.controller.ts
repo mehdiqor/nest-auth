@@ -3,11 +3,15 @@ import {
   Get,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { SpotifyService } from './spotify.service';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { JwtGuard } from 'src/auth/guard';
 
 @ApiTags('Spotify')
+@ApiBearerAuth()
+@UseGuards(JwtGuard)
 @Controller('spotify')
 export class SpotifyController {
   constructor(private spotifyService: SpotifyService) {}

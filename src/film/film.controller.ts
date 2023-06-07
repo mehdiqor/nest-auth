@@ -7,9 +7,10 @@ import {
   Post,
   Query,
   UploadedFile,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { ApiConsumes, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import {
   AddDirectorDto,
   AddMovieDto,
@@ -18,8 +19,11 @@ import {
 } from './dto';
 import { FilmService } from './film.service';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { JwtGuard } from 'src/auth/guard';
 
 @ApiTags('Film')
+@ApiBearerAuth()
+@UseGuards(JwtGuard)
 @Controller('film')
 export class FilmController {
   constructor(private readonly filmService: FilmService) {}

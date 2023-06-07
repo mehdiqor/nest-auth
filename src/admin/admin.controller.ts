@@ -4,12 +4,16 @@ import {
   Post,
   Get,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { ElasticIndexDto } from './dto';
-import { ApiConsumes, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import { JwtGuard } from 'src/auth/guard';
 
 @ApiTags('Admin')
+@ApiBearerAuth()
+@UseGuards(JwtGuard)
 @Controller('admin')
 export class AdminController {
   constructor(private adminService: AdminService) {}
