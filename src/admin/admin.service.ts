@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ElasticIndexDto } from './dto';
+import { AssignRoleDto } from './dto/rbac.dto';
 
 @Injectable()
 export class AdminService {
@@ -10,6 +11,18 @@ export class AdminService {
     const result = await new Promise((resolve) => {
       this.eventEmitter.emit(
         'admin.indexCrud',
+        dto,
+        resolve,
+      );
+    });
+
+    return result;
+  }
+
+  async roleAssignment(dto: AssignRoleDto) {
+    const result = await new Promise((resolve) => {
+      this.eventEmitter.emit(
+        'admin.roleAssignment',
         dto,
         resolve,
       );

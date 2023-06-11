@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { EditUserDto } from './dto';
 import { TfaDto } from 'src/auth/dto';
+import { OnEvent } from '@nestjs/event-emitter';
+import { AssignRoleDto } from 'src/admin/dto/rbac.dto';
 
 @Injectable()
 export class UserService {
@@ -52,5 +54,24 @@ export class UserService {
         isTfaEnabled: false,
       },
     });
+  }
+
+  @OnEvent('admin.roleAssignment')
+  async roleAssignment(
+    dto: AssignRoleDto,
+    resolve: (data: any) => void,
+  ) {
+    const { username, role } = dto;
+
+    const result = await this.prisma.user.update({
+      where: {
+        username,
+      },
+      data: {
+        role,
+      },
+    });
+
+    resolve(result);
   }
 }

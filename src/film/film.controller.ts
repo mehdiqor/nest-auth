@@ -24,8 +24,8 @@ import {
 import { FilmService } from './film.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtGuard, RolesGuard } from 'src/auth/guard';
-import { RolesEnum } from 'src/auth/dto';
 import { Roles } from 'src/auth/decorator';
+import { RolesEnum } from 'src/utils';
 
 @ApiTags('Film')
 @ApiBearerAuth()

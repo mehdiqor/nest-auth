@@ -26,7 +26,7 @@ import {
 import { JwtGuard, RolesGuard } from 'src/auth/guard';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Roles } from 'src/auth/decorator';
-import { RolesEnum } from 'src/auth/dto';
+import { RolesEnum } from 'src/utils';
 
 @ApiTags('Music')
 @ApiBearerAuth()

@@ -15,7 +15,8 @@ import {
 } from '@nestjs/swagger';
 import { JwtGuard, RolesGuard } from 'src/auth/guard';
 import { Roles } from 'src/auth/decorator';
-import { RolesEnum } from 'src/auth/dto';
+import { RolesEnum } from 'src/utils';
+import { AssignRoleDto } from './dto/rbac.dto';
 
 @ApiTags('Admin')
 @ApiBearerAuth()
@@ -29,6 +30,13 @@ export class AdminController {
   @ApiConsumes('application/x-www-form-urlencoded')
   elasticIndex(@Body() dto: ElasticIndexDto) {
     return this.adminService.elasticIndex(dto);
+  }
+
+  @Post('assign-role')
+  @Roles(RolesEnum.SUPERUSER)
+  @ApiConsumes('application/x-www-form-urlencoded')
+  roleAssignment(@Body() dto: AssignRoleDto) {
+    return this.adminService.roleAssignment(dto)
   }
 
   @Get('get-musics')

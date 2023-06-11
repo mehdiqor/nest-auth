@@ -3,4 +3,3 @@ export * from './signin.dto';
 export * from './forget-password.dto';
 export * from './reset-password.dto';
 export * from './tfa.dto';
-export * from './roles.config';

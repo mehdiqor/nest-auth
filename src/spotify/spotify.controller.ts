@@ -9,7 +9,7 @@ import { SpotifyService } from './spotify.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtGuard, RolesGuard } from 'src/auth/guard';
 import { Roles } from 'src/auth/decorator';
-import { RolesEnum } from 'src/auth/dto';
+import { RolesEnum } from 'src/utils';
 
 @ApiTags('Spotify')
 @ApiBearerAuth()

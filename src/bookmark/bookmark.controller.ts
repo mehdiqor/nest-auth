@@ -20,7 +20,7 @@ import {
   ApiConsumes,
   ApiTags,
 } from '@nestjs/swagger';
-import { RolesEnum } from 'src/auth/dto';
+import { RolesEnum } from 'src/utils';
 
 @ApiTags('Bookmarks')
 @ApiBearerAuth()
