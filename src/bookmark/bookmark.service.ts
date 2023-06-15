@@ -7,6 +7,7 @@ import {
   EditBookmarkDto,
 } from './dto';
 import { PrismaService } from '../prisma/prisma.service';
+import { ClientProxyFactory, Transport } from '@nestjs/microservices';
 
 @Injectable()
 export class BookmarkService {
@@ -96,5 +97,18 @@ export class BookmarkService {
         id: bookmarkId,
       },
     });
+  }
+
+  sendData(address: string, data) {
+    const authMicroservice = ClientProxyFactory.create({
+      transport: Transport.RMQ,
+      options: {
+        urls: ['amqp://localhost:???'],
+        queue: 'auth_queue',
+      },
+    });
+
+    const result = authMicroservice.send(address, data);
+    return result;
   }
 }
