@@ -11,7 +11,7 @@
 
 ## Description
 
-This repsitory is our base service. Used for manage other microservices and authentication.<br>
+This repsitory is our base service. Used for manage microservices and authentication.<br>
 signup, signin, signout, forgot-password, reset-password, signin with google and Two-factor authentication
 
 Other microservices include:
@@ -25,7 +25,7 @@ And the cover of the movie is uploaded to google-storage
 3. **Elasticsearch-Service:** In this project, the CQRS pattern is used<br>
 Users can search and find the movie and music they want from elasticsearch<br>
 If the music is not in our database, don't worry<br>
-We have allocated a path to receive information from Spotify
+We have allocated a route to receive data from external APIs (Spotify)
 
 you can access other services from this [link](https://github.com/mehdiqor/nest-microservice).
 
