@@ -1,21 +1,45 @@
 <p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="./images/nest-image.png" width="200" alt="Nest Logo" /></a>
+  <a href="http://nestjs.com/" target="blank"><img src="./images/nest-image.png" alt="Nest Logo" /></a>
 </p>
 
 [circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
 [circleci-url]: https://circleci.com/gh/nestjs/nest
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
+  <p align="center">This project developed by <a href="http://nestjs.com/" target="_blank">Nest.js</a> framework based on microservice architecture</p>
+  <p align="center">you can find other services <a href="https://github.com/mehdiqor/nest-microservice" target="_blank">here</a></p>
     <p align="center">
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+This repsitory is our base service. Used for manage other microservices and authentication.<br>
+signup, signin, signout, forgot-password, reset-password, signin with google and Two-factor authentication
+
+Other microservices include:
+
+1. **Music-Service:** artists can add their albums and tracks<br>
+And the music file is uploaded to google-storage
+
+2. **Film-Service:** directors can add their movies<br>
+And the cover of the movie is uploaded to google-storage
+
+3. **Elasticsearch-Service:** In this project, the CQRS pattern is used<br>
+Users can search and find the movie and music they want from elasticsearch<br>
+If the music is not in our database, don't worry<br>
+We have allocated a path to receive information from Spotify
+
+you can access other services from this [link](https://github.com/mehdiqor/nest-microservice).
 
 ## Installation and Running the app
 
 ```bash
-# installation
+# run with Docker
+$ docker build -t nest-auth .
+
+# docker compose
+$ docker-compose up -d
+
+# install with yarn
+$ yarn
 $ yarn install
 
 # development
@@ -31,26 +55,13 @@ $ yarn run start:prod
 ## Test
 
 ```bash
-# unit tests
-$ yarn run test
-
 # e2e tests
-$ yarn run test:e2e
-
-# test coverage
-$ yarn run test:cov
+$ yarn pretest:e2e
+$ yarn test:e2e
 ```
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
 
 ## Stay in touch
 
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](LICENSE).
+- Author - [Mehdi Ghorbani](https://github.com/mehdiqor)
+- Telegram - [Mehdi_qor](t.me/Mehdi_qor)
+- Email - [mehdighorbanin@gmail.com](mailto:mehdighorbanin@gmail.com)
