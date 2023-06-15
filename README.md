@@ -63,5 +63,5 @@ $ yarn test:e2e
 ## Stay in touch
 
 - Author - [Mehdi Ghorbani](https://github.com/mehdiqor)
-- Telegram - [Mehdi_qor](t.me/Mehdi_qor)
+- Telegram - [Mehdi_qor](https://t.me/Mehdi_qor)
 - Email - [mehdighorbanin@gmail.com](mailto:mehdighorbanin@gmail.com)
